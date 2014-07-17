@@ -2,7 +2,6 @@
 #define _MATCHA_MATCHERASSERT_H_
 
 #include <iostream>
-#include <memory>
 #include <iterator>
 #include <vector>
 #include "matcher.hpp"

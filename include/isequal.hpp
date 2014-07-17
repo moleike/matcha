@@ -2,7 +2,6 @@
 #define _MATCHA_ISEQUAL_H_
 
 #include <iostream>
-#include <memory>
 #include <string>
 #include <iterator>
 #include <functional>

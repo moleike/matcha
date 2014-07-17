@@ -1,7 +1,6 @@
 #ifndef _MATCHA_ISNOT_H_
 #define _MATCHA_ISNOT_H_
 
-#include <memory>
 #include "matcher.hpp"
 
 namespace matcha {
