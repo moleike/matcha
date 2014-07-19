@@ -1,4 +1,4 @@
 matcha
 ======
 
-C++ framework of matcher objects
+Matcha (抹茶) is C++ framework of matcher objects

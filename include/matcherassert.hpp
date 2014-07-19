@@ -25,8 +25,8 @@ namespace MatcherAssert {
     // raw C-style arrays are wrapped in std::vector
     template<typename T, size_t N>
     void assertThat(T const (& actual)[N], Matcher<std::vector<T> > const& matcher) {
-        using namespace std;
-        assertThat<vector<T> >(vector<T>(begin(actual), end(actual)), matcher);
+        std::vector<T> wrapper(std::begin(actual), std::end(actual));
+        assertThat(wrapper, matcher);
     }
 
 } // namespace MatcherAssert
