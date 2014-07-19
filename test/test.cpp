@@ -3,15 +3,14 @@
 #include <vector>
 #include <set>
 #include <map>
-#include "matcherassert.hpp"
 #include "isequal.hpp"
 #include "is.hpp"
 #include "isnot.hpp"
+#include "matcha_gtest.hpp"
 
 int main()
 {
     using namespace matcha;
-    using namespace matcha::MatcherAssert;
 
     int foo = 5;
     int bar = 5;
