@@ -4,9 +4,9 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <string>
 #include <iterator>
 #include "matcher.hpp"
-#include "matcherassert.hpp"
 #include "prettyprint.hpp"
 #include "gtest/gtest.h"
 
@@ -21,8 +21,7 @@ template<typename T>
 ::testing::AssertionResult matcherAssert(const char*,
                                          const char*,
                                          const T& actual, 
-                                         Matcher<T> const& matcher)
-{
+                                         Matcher<T> const& matcher) {
     if (!matcher.matches(actual)) {
         std::ostringstream os;
         os << "Expected: "
@@ -40,9 +39,18 @@ template<typename T , size_t N>
 ::testing::AssertionResult matcherAssert(const char*,
                                          const char*,
                                          T const (& actual)[N], 
-                                         Matcher<std::vector<T> > const& matcher) 
-{
+                                         Matcher<std::vector<T> > const& matcher) {
     std::vector<T> wrapper(std::begin(actual), std::end(actual));
+    return matcherAssert(0, 0, wrapper, matcher);
+}
+
+// C style strings are converted to std::string
+template<size_t N>
+::testing::AssertionResult matcherAssert(const char*,
+                                         const char*,
+                                         const char (& actual)[N], 
+                                         Matcher<std::string> const& matcher) {
+    std::string wrapper(std::begin(actual), std::end(actual));
     return matcherAssert(0, 0, wrapper, matcher);
 }
 

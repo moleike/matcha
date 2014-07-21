@@ -45,6 +45,18 @@ private:
         return actual.size() == expected.size() 
             && mismatch(begin(actual), end(actual), begin(expected)).first == end(actual);
     }
+
+    template<class U = T>
+    bool areEqual(std::set<U> const&actual, std::set<U> const&expected)
+    {
+        using namespace std;
+        if (actual.size() != expected.size())
+            return false;
+        set<U> result;
+        set_difference(actual.begin(), actual.end(), expected.begin(), expected.end(), 
+            inserter(result, begin(result)));
+        return result.empty();
+    }
 private:
     T expectedValue;
 };
@@ -56,9 +68,14 @@ IsEqual<T> equalTo(T const& operand) {
 
 template<typename T, size_t N>
 IsEqual<std::vector<T> > equalTo(T const (&operand)[N]) {
-    using namespace std;
-    vector<T> wrapper(begin(operand), end(operand));
-    return IsEqual<vector<T> >(wrapper);
+    std::vector<T> wrapper(std::begin(operand), std::end(operand));
+    return IsEqual<std::vector<T> >(wrapper);
+}
+
+template<size_t N>
+IsEqual<std::string> equalTo(char const (&operand)[N]) {
+    std::string wrapper(std::begin(operand), std::end(operand));
+    return IsEqual<std::string>(wrapper);
 }
 
 } // namespace matcha

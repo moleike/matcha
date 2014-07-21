@@ -46,6 +46,15 @@ TEST(Matcha, STLContainers) {
     assertThat(mapval, equalTo(mapval2));
 }
 
+TEST(Matcha, Sets) {
+    int x[] = {1,2,5,3,4};
+    int y[] = {1,2,3,5,5};
+    std::set<int> xx(std::begin(x), std::end(x));
+    std::set<int> yy(std::begin(y), std::end(y));
+    assertThat(xx, equalTo(yy));
+}
+
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
