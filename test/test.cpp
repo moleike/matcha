@@ -7,18 +7,28 @@
 #include "is.hpp"
 #include "isnot.hpp"
 #include "matcha_gtest.hpp"
+#include "gtest/gtest.h"
 
-int main()
-{
-    using namespace matcha;
+using namespace matcha;
 
+TEST(Matcha, IntegralValues) {
     int foo = 5;
     int bar = 5;
     assertThat(foo, is(not(equalTo(bar))));
+    assertThat(4, is(equalTo(-4)));
+}
+
+TEST(Matcha, CArrays) {
     int array1[5] = {1,3,3,4,5};
     int array2[6] = {1,2,3,4,5,6};
     assertThat(array1, is(equalTo(array2)));
+}
+
+TEST(Matcha, CString) {
     assertThat("foo", is(equalTo("foo")));
+}
+
+TEST(Matcha, STLContainers) {
     std::vector<int> v;
     v.push_back(3);
     std::vector<int> w;
@@ -34,5 +44,10 @@ int main()
     mapval2[1] = 1;
     mapval2[2] = 3;
     assertThat(mapval, equalTo(mapval2));
-    return 0;
+}
+
+int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

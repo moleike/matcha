@@ -9,29 +9,26 @@
 
 namespace matcha {
 
-template<typename AssertPolicy>
-class MatcherAssert : private AssertPolicy {
-
-public:
-    template<typename T>
-    void operator()(const T& actual, Matcher<T> const& matcher) {
-        if (!matcher.matches(actual)) {
-            std::ostringstream os;
-            os << "\nExpected: "
-               << matcher
-               << "\n but got: "
-               << actual;
-            AssertPolicy::failure(os);
-        }
+template<typename T>
+bool matcherAssert(const T& actual, Matcher<T> const& matcher, std::ostream& msg) {
+    if (!matcher.matches(actual)) {
+        std::ostringstream os;
+        os << "Expected: "
+           << matcher
+           << "\n but got: "
+           << actual;
+        msg << os.str();
+        return false;
     }
+    return true;
+}
 
-    // raw C-style arrays are wrapped in std::vector
-    template<typename T , size_t N>
-    void operator()(T const (& actual)[N], Matcher<std::vector<T> > const& matcher) {
-        std::vector<T> wrapper(std::begin(actual), std::end(actual));
-        operator()(wrapper, matcher);
-    }
-};
+// raw C-style arrays are wrapped in std::vector
+template<typename T , size_t N>
+bool matcherAssert(T const (& actual)[N], Matcher<std::vector<T> > const& matcher, std::ostream& msg) {
+    std::vector<T> wrapper(std::begin(actual), std::end(actual));
+    return matcherAssert(wrapper, matcher, msg);
+}
 
 } // namespace matcha
 
