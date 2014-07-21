@@ -25,12 +25,12 @@ TEST(Matcha, CArrays) {
 }
 
 TEST(Matcha, CString) {
-    assertThat("foo", is(equalTo("foo")));
+    assertThat("foo", is(equalTo("bar")));
 }
 
 TEST(Matcha, STLContainers) {
     std::vector<int> v;
-    v.push_back(3);
+    v.push_back(4);
     std::vector<int> w;
     w.push_back(4);
     assertThat(v, equalTo(w));

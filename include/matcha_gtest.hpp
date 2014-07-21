@@ -3,19 +3,57 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
+#include <iterator>
 #include "matcher.hpp"
 #include "matcherassert.hpp"
+#include "prettyprint.hpp"
 #include "gtest/gtest.h"
+
+/* 
+ * Google Test implementation of matcher assertions
+*/
+
+namespace matcha {
+namespace gtest {
+
+template<typename T>
+::testing::AssertionResult matcherAssert(const char*,
+                                         const char*,
+                                         const T& actual, 
+                                         Matcher<T> const& matcher)
+{
+    if (!matcher.matches(actual)) {
+        std::ostringstream os;
+        os << "Expected: "
+           << matcher
+           << "\n but got: "
+           << actual;
+        return  ::testing::AssertionFailure() 
+            << os.str();
+    }
+    return ::testing::AssertionSuccess();
+}
+
+// raw C-style arrays are wrapped in std::vector
+template<typename T , size_t N>
+::testing::AssertionResult matcherAssert(const char*,
+                                         const char*,
+                                         T const (& actual)[N], 
+                                         Matcher<std::vector<T> > const& matcher) 
+{
+    std::vector<T> wrapper(std::begin(actual), std::end(actual));
+    return matcherAssert(0, 0, wrapper, matcher);
+}
+
+} // namespace gtest
+} // namespace matcha
 
 /*
  * we need the assertThat logic in a macro, so that
  * the ADD_FAILURE will report the right __FILE__ and __LINE__
  */
-#define assertThat(actual,matcher) do {                     \
-    std::ostringstream msg;                                 \
-    if (!matcha::matcherAssert(actual,matcher,msg))         \
-        ADD_FAILURE() << msg.str();                         \
-    } while(0)
-
+#define assertThat(actual,matcher)  \
+    ASSERT_PRED_FORMAT2(gtest::matcherAssert, actual, matcher)
 
 #endif // _MATCHA_MATCHERASSERT_H_
