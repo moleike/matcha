@@ -20,19 +20,37 @@ public:
     virtual bool matches(const T& arg) const {
         return matcher_.matches(arg); 
     }
-    virtual void describe(std::ostream& o) const
-    {
+    virtual void describe(std::ostream& o) const{
         o << "is ";
         matcher_.describe(o);
     }
-
 private:
     Matcher<T> const& matcher_;
 };
 
 template<typename T>
+class Is<T*> : public Matcher<T*> {
+public:
+    Is(const Matcher<T*>& matcher) : matcher_(matcher) { }
+    virtual bool matches(const T* arg) const {
+        return matcher_.matches(arg); 
+    }
+    virtual void describe(std::ostream& o) const {
+        o << "is ";
+        matcher_.describe(o);
+    }
+private:
+    Matcher<T*> const& matcher_;
+};
+
+template<typename T>
 Is<T> is(Matcher<T> const& operand) {
     return Is<T>(operand);
+}
+
+template<typename T>
+Is<T*> is(Matcher<T*> const& operand) {
+    return Is<T*>(operand);
 }
 
 } // namespace matcha

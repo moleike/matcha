@@ -6,6 +6,7 @@
 #include "isequal.hpp"
 #include "is.hpp"
 #include "isnot.hpp"
+#include "isnull.hpp"
 #include "matcha_gtest.hpp"
 #include "gtest/gtest.h"
 
@@ -54,6 +55,11 @@ TEST(Matcha, Sets) {
     assertThat(xx, equalTo(yy));
 }
 
+TEST(Matcha, NullPointers) {
+    int foo = 0;
+    int *p = &foo;
+    assertThat(p, is(not(null())));
+}
 
 int main(int argc, char **argv)
 {

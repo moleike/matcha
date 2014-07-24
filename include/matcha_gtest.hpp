@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <iterator>
+#include <utility>
 #include "matcher.hpp"
 #include "prettyprint.hpp"
 #include "gtest/gtest.h"
@@ -52,6 +53,23 @@ template<size_t N>
                                          Matcher<std::string> const& matcher) {
     std::string wrapper(std::begin(actual), std::end(actual));
     return matcherAssert(0, 0, wrapper, matcher);
+}
+
+// pointer matchers
+template<typename T, typename U,
+         typename std::enable_if<std::is_convertible<T*,U*>::value>::type* = nullptr>
+::testing::AssertionResult matcherAssert(const char*,
+                                         const char*,
+                                         const T* actual, 
+                                         Matcher<U*> const& matcher) {
+    if (!matcher.matches(actual)) {
+        return  ::testing::AssertionFailure() 
+            << "Expected: "
+            << matcher
+            << "\n but got: "
+            << actual;
+    }
+    return ::testing::AssertionSuccess();
 }
 
 } // namespace gtest
