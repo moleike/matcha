@@ -10,8 +10,7 @@ class Matcher {
 public:
     virtual bool matches(const T&value) const = 0;
     virtual void describe(std::ostream& o) const = 0;
-    template <typename U = T>
-    friend std::ostream& operator << (std::ostream& o, const Matcher<U>& m) {
+    friend std::ostream& operator << (std::ostream& o, const Matcher<T>& m) {
         m.describe(o);
         return o; 
     }
@@ -22,8 +21,7 @@ class Matcher<T*> {
 public:
     virtual bool matches(const T*value) const = 0;
     virtual void describe(std::ostream& o) const = 0;
-    template <typename U = T>
-    friend std::ostream& operator << (std::ostream& o, const Matcher<U*>& m) {
+    friend std::ostream& operator << (std::ostream& o, const Matcher<T*>& m) {
         m.describe(o);
         return o; 
     }
