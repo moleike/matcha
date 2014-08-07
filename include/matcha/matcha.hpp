@@ -1,0 +1,410 @@
+/* vim: set sw=4 ts=4 et : */
+/* matcha.hpp: matcher objects for GoogleTest
+ *
+ * Copyright (C) 2014 Alexandre Moreno
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+#ifndef _MATCHA_H_
+#define _MATCHA_H_
+
+#include <utility>
+#include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <iterator> 
+#include <functional>
+#include <set>
+#include <map>
+#include <vector>
+#include <string>
+#include <type_traits>
+#include "prettyprint.hpp"
+#include "gtest/gtest.h"
+
+namespace matcha {
+
+struct DefaultOutputPolicy {
+    typedef bool return_type;
+protected:
+    bool print(std::string const& expected, std::string const& actual, bool assertion) const {
+        if (!assertion) {
+            std::cout << "Expected: " << expected << "\n but got: " << actual << std::endl;
+            return false; 
+        }
+        return true;
+    }
+};
+
+struct GTestOutputPolicy {
+    typedef ::testing::AssertionResult return_type;
+protected:
+    // Google Test implementation of matcher assertions
+    ::testing::AssertionResult print(std::string const& expected, 
+                                     std::string const& actual, 
+                                     bool assertion) const {
+        if (!assertion) {
+            return ::testing::AssertionFailure() 
+                   << "Expected: " << expected << "\n but got: " << actual;
+        }
+        return ::testing::AssertionSuccess();
+    }
+};
+
+/* we need the assertThat logic in a macro, so that
+ * the ADD_FAILURE will report the right __FILE__ and __LINE__
+ */
+#define assertThat(actual,matcher)  \
+    ASSERT_PRED_FORMAT2(assertResult, actual, matcher)
+                            
+
+template<class MatcherPolicy,class ExpectedType, class OutputPolicy = GTestOutputPolicy>
+class Matcher : private MatcherPolicy, private OutputPolicy {
+public:
+    typedef Matcher<MatcherPolicy,ExpectedType> type;
+    Matcher(ExpectedType const& value = ExpectedType()) : expected_(value)
+    { }
+
+    template<class ActualType>
+    bool matches(ActualType const& actual) const {
+        return MatcherPolicy::matches(expected_, actual);
+    }
+
+    template<size_t N>
+    bool matches(ExpectedType const (&actual)[N]) const {
+        std::vector<ExpectedType> wrapper(std::begin(actual), std::end(actual));
+        return MatcherPolicy::matches(expected_, wrapper);
+    }
+
+    template<class ActualType>
+    friend auto assertResult(const char*, 
+                             const char*,
+                             ActualType const& actual,
+                             type const& matcher) -> typename OutputPolicy::return_type {
+        std::ostringstream sactual, smatcher;
+        sactual << actual;
+        smatcher << matcher;
+        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    }
+
+    template<size_t N>
+    friend auto assertResult(const char*,
+                             const char*,
+                             ExpectedType const (&actual)[N],
+                             type const& matcher) -> typename OutputPolicy::return_type {
+        std::ostringstream sactual, smatcher;
+        sactual << actual;
+        smatcher << matcher;
+        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+        matcher.describe(o);
+        return o; 
+    }
+private:
+    void describe(std::ostream& o) const {
+        MatcherPolicy::describe(o, expected_);
+    }
+    ExpectedType expected_;
+};
+
+template<class MatcherPolicy, class ExpectedType, class OutputPolicy>
+class Matcher<MatcherPolicy,ExpectedType*,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+public:
+    typedef Matcher<MatcherPolicy,ExpectedType*> type;
+    Matcher(ExpectedType const* pvalue) : expected_(pvalue) { }
+
+    template<class ActualType>
+    bool matches(ActualType const* actual) const {
+        return MatcherPolicy::matches(expected_, actual);
+    }
+
+    template<class ActualType>
+    friend auto assertResult(const char*,
+                             const char*,
+                             ActualType const* actual, 
+                             type const& matcher) -> typename OutputPolicy::return_type {
+        std::ostringstream sactual, smatcher;
+        sactual << actual;
+        smatcher << matcher;
+        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+        matcher.describe(o);
+        return o; 
+    }
+private:
+    void describe(std::ostream& o) const {
+        MatcherPolicy::describe(o, expected_);
+    }
+    ExpectedType const* expected_;
+};
+
+// raw C-style arrays are wrapped in std::vector
+template<class MatcherPolicy, class ExpectedType, size_t N, class OutputPolicy>
+class Matcher<MatcherPolicy,ExpectedType[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+public:
+    typedef Matcher<MatcherPolicy,ExpectedType[N]> type;
+    Matcher(ExpectedType const (&value)[N]) 
+        : expected_(std::begin(value), std::end(value)) { }
+
+    template<size_t M>
+    bool matches(ExpectedType const (&actual)[M]) const {
+        std::vector<ExpectedType> wrapper(std::begin(actual), std::end(actual));
+        return MatcherPolicy::matches(expected_, wrapper);
+    }
+
+    template<size_t M>
+    friend auto assertResult(const char*,
+                             const char*,
+                             ExpectedType const (&actual)[M], 
+                             type const& matcher) -> typename OutputPolicy::return_type {
+        std::ostringstream sactual, smatcher;
+        sactual << actual;
+        smatcher << matcher;
+        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+        matcher.describe(o);
+        return o; 
+    }
+private:
+    void describe(std::ostream& o) const {
+        MatcherPolicy::describe(o, expected_);
+    }
+    std::vector<ExpectedType> expected_;
+};
+
+
+// null-terminated strings are converted to std::string
+template<class MatcherPolicy, size_t N, class OutputPolicy>
+class Matcher<MatcherPolicy,char[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+public:
+    typedef Matcher<MatcherPolicy,char[N]> type;
+    Matcher(char const (&value)[N]) 
+        : expected_(value) { }
+
+    template<size_t M>
+    bool matches(char const (&actual)[M]) const {
+        using namespace std;
+        return MatcherPolicy::matches(expected_, string(actual));
+    }
+
+    template<size_t M>
+    friend auto assertResult(const char*,
+                             const char*,
+                             char const (&actual)[M],
+                             type const& matcher) -> typename OutputPolicy::return_type {
+        std::ostringstream sactual, smatcher;
+        sactual << actual;
+        smatcher << matcher;
+        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+        matcher.describe(o);
+        return o; 
+    }
+private:
+    void describe(std::ostream& o) const {
+        MatcherPolicy::describe(o, expected_);
+    }
+    std::string expected_;
+};
+
+struct IsNull {
+protected:
+    template<typename T>
+    bool matches(std::nullptr_t expected, T const* actual) const {
+        return actual == expected;
+    }
+
+    template<typename T>
+    void describe(std::ostream& o, T const& expected) const {
+        o << "null pointer";  
+    }
+};
+
+Matcher<IsNull,std::nullptr_t> null() {
+    return Matcher<IsNull,std::nullptr_t>(nullptr);
+}
+
+struct Is {
+protected:
+    template<class Policy, class ExpType, class ActualType>
+    bool matches(Matcher<Policy,ExpType> const& expected, ActualType const& actual) const {
+        return expected.matches(actual);
+    }
+
+    template<class Policy, class ExpType>
+    void describe(std::ostream& o, Matcher<Policy,ExpType> const& expected) const {
+        o << "is " << expected;  
+    }
+};
+
+template<class Policy, class ExpType>
+Matcher<Is,Matcher<Policy,ExpType> > is(Matcher<Policy,ExpType> const& value) {
+    return Matcher<Is,Matcher<Policy,ExpType> >(value);
+}
+
+struct IsNot {
+protected:
+    template<class Policy, class ExpType, class ActualType>
+    bool matches(Matcher<Policy,ExpType> const& expected, ActualType const& actual) const {
+        return !expected.matches(actual);
+    }
+
+    template<class Policy, class ExpType>
+    void describe(std::ostream& o, Matcher<Policy,ExpType> const& expected) const {
+        o << "not " << expected;  
+    }
+};
+
+template<class Policy, class T>
+constexpr Matcher<IsNot,Matcher<Policy,T> > operator!(Matcher<Policy,T> const& value) {
+    return Matcher<IsNot,Matcher<Policy,T> >(value);
+}
+
+struct IsEqual {
+protected:
+    template<typename T>
+    bool matches(T const& expected, T const& actual,
+                 typename std::enable_if<
+                    !pretty_print::is_container<T>::value>::type* = 0) const
+    {
+        return expected == actual;
+    }
+
+    template<class T>
+    bool matches(T const& expected, T const& actual,
+                 typename std::enable_if<
+                    pretty_print::has_const_iterator<T>::value>::type* = 0) const
+    {
+        using namespace std;
+        return actual.size() == expected.size() 
+            && mismatch(begin(actual), end(actual), begin(expected)).first == end(actual);
+    }
+
+    template<class T>
+    bool matches(std::set<T> const& expected, std::set<T> const& actual) const
+    {
+        using namespace std;
+        if (actual.size() != expected.size())
+            return false;
+        set<T> result;
+        set_difference(actual.begin(), actual.end(), expected.begin(), expected.end(), 
+            inserter(result, begin(result)));
+        return result.empty();
+    }
+
+    template<typename T>
+    void describe(std::ostream& o, T const& expected) const {
+       o << expected;  
+    }
+};
+
+template<typename T>
+Matcher<IsEqual,T> equalTo(T const& value) {
+    return Matcher<IsEqual,T>(value);
+}
+
+template<typename T, size_t N>
+Matcher<IsEqual,T[N]> equalTo(T const (&value)[N]) {
+    return Matcher<IsEqual,T[N]>(value);
+}
+
+struct IsContaining {
+protected:
+    template<typename C, typename T,
+         typename std::enable_if<std::is_same<typename C::value_type,T>::value>::type* = nullptr>
+    bool matches(T const& item, C const& cont) const {
+        return std::end(cont) != std::find(std::begin(cont), std::end(cont), item);
+    }
+
+    template<typename C = std::string, typename T = std::string>
+    bool matches(std::string const& substr, std::string const& actual) const {
+        return std::string::npos != actual.find(substr);
+    }
+
+    template<typename T>
+    void describe(std::ostream& o, T const& expected) const {
+       o << "containing " << expected;  
+    }
+};
+
+template<typename T>
+Matcher<IsContaining,T> containing(T const& value) {
+    return Matcher<IsContaining,T>(value);
+}
+
+template<typename T, size_t N>
+Matcher<IsContaining,T[N]> containing(T const (&value)[N]) {
+    return Matcher<IsContaining,T[N]>(value);
+}
+
+} // namespace matcha
+
+//int main()
+//{
+//    assertResult(5, not(equalTo(5)));
+//    
+//    assertResult("string hello world", not(containing("hello")));
+//
+//    std::vector<int> v;
+//    v.push_back(3);
+//    v.push_back(4);
+//    v.push_back(5);
+//    v.push_back(1);
+//    assertResult(v,containing(6));
+//
+//    int w[] = {1,2,5,3,6};
+//    assertResult(w, is(not(containing(6))));
+////    ret = containing(5).matches(v);
+////    std::cout << "value is " << ret << std::endl;
+////
+//    int x[] = {1,2,5,3,1};
+//    int y[] = {1,2,3,5,5};
+//    std::set<int> xx(std::begin(x), std::end(x));
+//    std::set<int> yy(std::begin(y), std::end(y));
+//
+//    assertResult(xx, not(equalTo(yy)));
+//    assertResult(x, equalTo(y));
+////    ret = not(equalTo(yy)).matches(xx);
+////    std::cout << "value is " << not(equalTo(yy)) << std::endl;
+////    std::cout << "return " << ret << std::endl;
+////
+//    std::map<int,int> mapval;
+//    mapval[0] = 0;
+//    mapval[1] = 3;
+//    mapval[2] = 3;
+//    std::map<int,int> mapval2;
+//    mapval2[0] = 0;
+//    mapval2[1] = 1;
+//    mapval2[2] = 3;
+//    assertResult(mapval,equalTo(mapval2));
+////    ret = not(equalTo(mapval2)).matches(mapval);
+////    std::cout << "value is " << not(equalTo(mapval2)) << std::endl;
+////    std::cout << "return " << ret << std::endl;
+////
+//    int foo = 5;
+//    int *p = &foo;
+//    assertResult(p,is(null()));
+//
+//    return 0;
+//}
+
+#endif // _MATCHA_H_
