@@ -15,6 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * Sample code for Matcha on Google Tests
+ * All the tests in this sample code are made to deliberately fail
+ *
  */
 #include <iostream>
 #include <string>
@@ -29,35 +32,44 @@ TEST(Matcha, IntegralValues) {
     int foo = 5;
     int bar = 5;
     assertThat(foo, is(not(equalTo(bar))));
-    assertThat(4, is(equalTo(-4)));
 }
 
-TEST(Matcha, CArrays) {
+TEST(Matcha, CArraysContaining) {
     int w[] = {1,2,5,3,6};
     assertThat(w, is(not(containing(6))));
+}
 
+TEST(Matcha, CArraysEquals) {
     int array1[5] = {1,3,3,4,5};
     int array2[6] = {1,2,3,4,5,6};
     assertThat(array1, is(equalTo(array2)));
 }
 
-TEST(Matcha, CString) {
+TEST(Matcha, CStringEquals) {
     assertThat("foo", is(equalTo("bar")));
+}
+
+TEST(Matcha, CStringContaining) {
     assertThat("hello, world", is(not(containing("hello"))));
 }
 
-TEST(Matcha, STLContainers) {
+TEST(Matcha, vectorsEquals) {
     std::vector<int> v;
     v.push_back(4);
     std::vector<int> w;
     w.push_back(4);
     assertThat(v, is(not(equalTo(w))));
+}
 
+TEST(Matcha, vectorsContaining) {
+    std::vector<int> v;
     v.push_back(3);
     v.push_back(5);
     v.push_back(1);
     assertThat(v, is(containing(6)));
+}
 
+TEST(Matcha, mapsEquals) {
     std::map<int,int> mapval;
     mapval[0] = 0;
     mapval[1] = 3;
@@ -67,7 +79,9 @@ TEST(Matcha, STLContainers) {
     mapval2[1] = 1;
     mapval2[2] = 3;
     assertThat(mapval, equalTo(mapval2));
+}
 
+TEST(Matcha, setsEquals) {
     int x[] = {1,2,5,3,4};
     int y[] = {1,2,3,5,5};
     std::set<int> xx(std::begin(x), std::end(x));
@@ -79,6 +93,20 @@ TEST(Matcha, NullPointers) {
     int foo = 0;
     int *p = &foo;
     assertThat(p, is(null()));
+}
+
+TEST(Matcha, testAnyOf) {
+    std::vector<int> v;
+    v.push_back(4);
+    v.push_back(5);
+    assertThat(v, is(anyOf(containing(3), containing(6))));
+}
+
+TEST(Matcha, testAllOf) {
+    std::vector<int> v;
+    v.push_back(4);
+    v.push_back(5);
+    assertThat(v, allOf(containing(4), containing(6)));
 }
 
 int main(int argc, char **argv)

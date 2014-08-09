@@ -26,14 +26,29 @@
 #include <iterator> 
 #include <functional>
 #include <set>
-#include <map>
 #include <vector>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include "prettyprint.hpp"
 #include "gtest/gtest.h"
 
 namespace matcha {
+
+// SFINAE type trait to detect whether type T satisfies EqualityComparable.
+
+template<typename T, typename = void>
+struct is_equality_comparable : std::false_type
+{ };
+
+template<typename T>
+struct is_equality_comparable<T,
+    typename std::enable_if<
+        true,
+        decltype((std::declval<T>() == std::declval<T>()), (void)0)
+        >::type
+    > : std::true_type
+{ };
 
 struct DefaultOutputPolicy {
     typedef bool return_type;
@@ -257,8 +272,8 @@ protected:
 };
 
 template<class Policy, class ExpType>
-Matcher<Is,Matcher<Policy,ExpType> > is(Matcher<Policy,ExpType> const& value) {
-    return Matcher<Is,Matcher<Policy,ExpType> >(value);
+Matcher<Is,Matcher<Policy,ExpType>> is(Matcher<Policy,ExpType> const& value) {
+    return Matcher<Is,Matcher<Policy,ExpType>>(value);
 }
 
 struct IsNot {
@@ -275,8 +290,8 @@ protected:
 };
 
 template<class Policy, class T>
-constexpr Matcher<IsNot,Matcher<Policy,T> > operator!(Matcher<Policy,T> const& value) {
-    return Matcher<IsNot,Matcher<Policy,T> >(value);
+Matcher<IsNot,Matcher<Policy,T>> operator!(Matcher<Policy,T> const& value) {
+    return Matcher<IsNot,Matcher<Policy,T>>(value);
 }
 
 struct IsEqual {
@@ -284,7 +299,18 @@ protected:
     template<typename T>
     bool matches(T const& expected, T const& actual,
                  typename std::enable_if<
-                    !pretty_print::is_container<T>::value>::type* = 0) const
+                    !is_equality_comparable<T>::value
+                    >::type* = 0) const
+    {
+        return false;
+    }
+
+    template<typename T>
+    bool matches(T const& expected, T const& actual,
+                 typename std::enable_if<
+                    !pretty_print::is_container<T>::value
+                    && is_equality_comparable<T>::value
+                    >::type* = 0) const
     {
         return expected == actual;
     }
@@ -356,55 +382,44 @@ Matcher<IsContaining,T[N]> containing(T const (&value)[N]) {
     return Matcher<IsContaining,T[N]>(value);
 }
 
-} // namespace matcha
+struct AnyOf {
+protected:
+    template<class PolicyA, class PolicyB, class T,  class ActualType>
+    bool matches(std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers, ActualType const& actual) const {
+        return std::get<0>(matchers).matches(actual) || std::get<1>(matchers).matches(actual);
+    }
 
-//int main()
-//{
-//    assertResult(5, not(equalTo(5)));
-//    
-//    assertResult("string hello world", not(containing("hello")));
-//
-//    std::vector<int> v;
-//    v.push_back(3);
-//    v.push_back(4);
-//    v.push_back(5);
-//    v.push_back(1);
-//    assertResult(v,containing(6));
-//
-//    int w[] = {1,2,5,3,6};
-//    assertResult(w, is(not(containing(6))));
-////    ret = containing(5).matches(v);
-////    std::cout << "value is " << ret << std::endl;
-////
-//    int x[] = {1,2,5,3,1};
-//    int y[] = {1,2,3,5,5};
-//    std::set<int> xx(std::begin(x), std::end(x));
-//    std::set<int> yy(std::begin(y), std::end(y));
-//
-//    assertResult(xx, not(equalTo(yy)));
-//    assertResult(x, equalTo(y));
-////    ret = not(equalTo(yy)).matches(xx);
-////    std::cout << "value is " << not(equalTo(yy)) << std::endl;
-////    std::cout << "return " << ret << std::endl;
-////
-//    std::map<int,int> mapval;
-//    mapval[0] = 0;
-//    mapval[1] = 3;
-//    mapval[2] = 3;
-//    std::map<int,int> mapval2;
-//    mapval2[0] = 0;
-//    mapval2[1] = 1;
-//    mapval2[2] = 3;
-//    assertResult(mapval,equalTo(mapval2));
-////    ret = not(equalTo(mapval2)).matches(mapval);
-////    std::cout << "value is " << not(equalTo(mapval2)) << std::endl;
-////    std::cout << "return " << ret << std::endl;
-////
-//    int foo = 5;
-//    int *p = &foo;
-//    assertResult(p,is(null()));
-//
-//    return 0;
-//}
+    template<class PolicyA, class PolicyB, class T>
+    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers) const {
+        o << "any of " << std::get<0>(matchers) << " or " <<  std::get<1>(matchers);  
+    }
+};
+
+template<class PolicyA, class PolicyB, class T>
+Matcher<AnyOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>> 
+anyOf(Matcher<PolicyA,T> const& matcherA, Matcher<PolicyB,T> const& matcherB) {
+    return Matcher<AnyOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>>(std::make_tuple(matcherA, matcherB));
+}
+
+struct AllOf {
+protected:
+    template<class PolicyA, class PolicyB, class T,  class ActualType>
+    bool matches(std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers, ActualType const& actual) const {
+        return std::get<0>(matchers).matches(actual) && std::get<1>(matchers).matches(actual);
+    }
+
+    template<class PolicyA, class PolicyB, class T>
+    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers) const {
+        o << "all of " << std::get<0>(matchers) << " and " <<  std::get<1>(matchers);  
+    }
+};
+
+template<class PolicyA, class PolicyB, class T>
+Matcher<AllOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>> 
+allOf(Matcher<PolicyA,T> const& matcherA, Matcher<PolicyB,T> const& matcherB) {
+    return Matcher<AllOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>>(std::make_tuple(matcherA, matcherB));
+}
+
+} // namespace matcha
 
 #endif // _MATCHA_H_
