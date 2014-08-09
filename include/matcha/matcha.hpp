@@ -370,7 +370,13 @@ protected:
     void describe(std::ostream& o, T const& expected) const {
        o << "containing " << expected;  
     }
+
 };
+
+template<>
+void IsContaining::describe<std::string>(std::ostream& o, std::string const& expected) const {
+   o << "containing " << "\"" << expected << "\"";  
+}
 
 template<typename T>
 Matcher<IsContaining,T> containing(T const& value) {
@@ -382,42 +388,57 @@ Matcher<IsContaining,T[N]> containing(T const (&value)[N]) {
     return Matcher<IsContaining,T[N]>(value);
 }
 
+struct StringStartsWith {
+protected:
+    bool matches(std::string const& substr, std::string const& actual) const {
+        return !actual.compare(0, substr.size(), substr);
+    }
+    
+    void describe(std::ostream& o, std::string const& expected) const {
+       o << "starts with " << "\"" << expected << "\"";  
+    }
+};
+
+Matcher<StringStartsWith,std::string> startsWith(std::string const& val) {
+    return Matcher<StringStartsWith,std::string>(val);
+}
+
 struct AnyOf {
 protected:
-    template<class PolicyA, class PolicyB, class T,  class ActualType>
-    bool matches(std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers, ActualType const& actual) const {
+    template<class PolicyA, class PolicyB, class TA, class TB, class ActualType>
+    bool matches(std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers, ActualType const& actual) const {
         return std::get<0>(matchers).matches(actual) || std::get<1>(matchers).matches(actual);
     }
 
-    template<class PolicyA, class PolicyB, class T>
-    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers) const {
+    template<class PolicyA, class PolicyB, class TA, class TB>
+    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers) const {
         o << "any of " << std::get<0>(matchers) << " or " <<  std::get<1>(matchers);  
     }
 };
 
-template<class PolicyA, class PolicyB, class T>
-Matcher<AnyOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>> 
-anyOf(Matcher<PolicyA,T> const& matcherA, Matcher<PolicyB,T> const& matcherB) {
-    return Matcher<AnyOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>>(std::make_tuple(matcherA, matcherB));
+template<class PolicyA, class PolicyB, class TA, class TB>
+Matcher<AnyOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>> 
+anyOf(Matcher<PolicyA,TA> const& matcherA, Matcher<PolicyB,TB> const& matcherB) {
+    return Matcher<AnyOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>(std::make_tuple(matcherA, matcherB));
 }
 
 struct AllOf {
 protected:
-    template<class PolicyA, class PolicyB, class T,  class ActualType>
-    bool matches(std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers, ActualType const& actual) const {
+    template<class PolicyA, class PolicyB, class TA, class TB, class ActualType>
+    bool matches(std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers, ActualType const& actual) const {
         return std::get<0>(matchers).matches(actual) && std::get<1>(matchers).matches(actual);
     }
 
-    template<class PolicyA, class PolicyB, class T>
-    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>> const& matchers) const {
+    template<class PolicyA, class PolicyB, class TA, class TB>
+    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers) const {
         o << "all of " << std::get<0>(matchers) << " and " <<  std::get<1>(matchers);  
     }
 };
 
-template<class PolicyA, class PolicyB, class T>
-Matcher<AllOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>> 
-allOf(Matcher<PolicyA,T> const& matcherA, Matcher<PolicyB,T> const& matcherB) {
-    return Matcher<AllOf,std::tuple<Matcher<PolicyA,T>,Matcher<PolicyB,T>>>(std::make_tuple(matcherA, matcherB));
+template<class PolicyA, class PolicyB, class TA, class TB>
+Matcher<AllOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>> 
+allOf(Matcher<PolicyA,TA> const& matcherA, Matcher<PolicyB,TB> const& matcherB) {
+    return Matcher<AllOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>(std::make_tuple(matcherA, matcherB));
 }
 
 } // namespace matcha

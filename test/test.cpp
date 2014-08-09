@@ -109,6 +109,14 @@ TEST(Matcha, testAllOf) {
     assertThat(v, allOf(containing(4), containing(6)));
 }
 
+TEST(Matcha, StringStartWith) {
+    assertThat("myStringOfNote", startsWith("you"));
+}
+
+TEST(Matcha, StringStartWithAndAllof) {
+    assertThat("myStringOfNote", allOf(startsWith("you"), containing("Note")));
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
