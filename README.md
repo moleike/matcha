@@ -9,7 +9,7 @@ From the original project:
 > Provides a library of matcher objects (also known as constraints or predicates) allowing 'match' rules to be defined declaratively, to be used in other frameworks. Typical scenarios include testing frameworks, mocking libraries and UI validation rules.
 
 
-Matcha should be easily extensible with custom matchers since it uses policy-based classes for the matchers.
+Matcha should be easily extensible with custom matchers since it uses [policy-based](http://en.wikipedia.org/wiki/Policy-based_design) classes for the matchers.
 
 Examples
 ========
