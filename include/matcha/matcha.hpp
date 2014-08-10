@@ -343,6 +343,11 @@ protected:
     }
 };
 
+template<>
+void IsEqual::describe(std::ostream& o, std::string const& expected) const {
+   o << "\"" << expected << "\"";  
+}
+
 template<typename T>
 Matcher<IsEqual,T> equalTo(T const& value) {
     return Matcher<IsEqual,T>(value);
@@ -370,11 +375,10 @@ protected:
     void describe(std::ostream& o, T const& expected) const {
        o << "containing " << expected;  
     }
-
 };
 
 template<>
-void IsContaining::describe<std::string>(std::ostream& o, std::string const& expected) const {
+void IsContaining::describe(std::ostream& o, std::string const& expected) const {
    o << "containing " << "\"" << expected << "\"";  
 }
 
@@ -401,6 +405,21 @@ protected:
 
 Matcher<StringStartsWith,std::string> startsWith(std::string const& val) {
     return Matcher<StringStartsWith,std::string>(val);
+}
+
+struct StringEndsWith {
+protected:
+    bool matches(std::string const& substr, std::string const& actual) const {
+        return !actual.compare(actual.size() - substr.size(), substr.size(), substr);
+    }
+    
+    void describe(std::ostream& o, std::string const& expected) const {
+       o << "ends with " << "\"" << expected << "\"";  
+    }
+};
+
+Matcher<StringEndsWith,std::string> endsWith(std::string const& val) {
+    return Matcher<StringEndsWith,std::string>(val);
 }
 
 struct AnyOf {

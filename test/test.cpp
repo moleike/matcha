@@ -95,6 +95,14 @@ TEST(Matcha, NullPointers) {
     assertThat(p, is(null()));
 }
 
+TEST(Matcha, StringStartWith) {
+    assertThat("myStringOfNote", startsWith("you"));
+}
+
+TEST(Matcha, StringEndsWith) {
+    assertThat("myStringOfNote", endsWith("Notes"));
+}
+
 TEST(Matcha, testAnyOf) {
     std::vector<int> v;
     v.push_back(4);
@@ -109,12 +117,8 @@ TEST(Matcha, testAllOf) {
     assertThat(v, allOf(containing(4), containing(6)));
 }
 
-TEST(Matcha, StringStartWith) {
-    assertThat("myStringOfNote", startsWith("you"));
-}
-
-TEST(Matcha, StringStartWithAndAllof) {
-    assertThat("myStringOfNote", allOf(startsWith("you"), containing("Note")));
+TEST(Matcha, testStringAllof) {
+    assertThat("myStringOfNote", is(allOf(startsWith("you"), endsWith("Note"))));
 }
 
 int main(int argc, char **argv)
