@@ -378,27 +378,27 @@ protected:
 
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
-       o << "containing " << expected;  
+       o << "contains " << expected;  
     }
 };
 
 template<>
 void IsContaining::describe(std::ostream& o, std::string const& expected) const {
-   o << "containing " << "\"" << expected << "\"";  
+   o << "contains " << "\"" << expected << "\"";  
 }
 
 template<typename T>
-Matcher<IsContaining,T> containing(T const& value) {
+Matcher<IsContaining,T> contains(T const& value) {
     return Matcher<IsContaining,T>(value);
 }
 
 template<typename T, size_t N>
-Matcher<IsContaining,T[N]> containing(T const (&value)[N]) {
+Matcher<IsContaining,T[N]> contains(T const (&value)[N]) {
     return Matcher<IsContaining,T[N]>(value);
 }
 
 template<class Key, class T>
-Matcher<IsContaining,std::pair<const Key,T>> containing(Key const& key, T const& value) {
+Matcher<IsContaining,std::pair<const Key,T>> contains(Key const& key, T const& value) {
     return Matcher<IsContaining,std::pair<const Key,T>>(std::pair<const Key,T>(key, value));
 }
 
