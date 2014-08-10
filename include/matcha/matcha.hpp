@@ -33,6 +33,12 @@
 #include "prettyprint.hpp"
 #include "gtest/gtest.h"
 
+/* we need the assertThat logic in a macro, so that
+ * the ADD_FAILURE will report the right __FILE__ and __LINE__
+ */
+#define assertThat(actual,matcher)  \
+    ASSERT_PRED_FORMAT2(assertResult, actual, matcher)
+
 namespace matcha {
 
 // SFINAE type trait to detect whether type T satisfies EqualityComparable.
@@ -76,13 +82,6 @@ protected:
         return ::testing::AssertionSuccess();
     }
 };
-
-/* we need the assertThat logic in a macro, so that
- * the ADD_FAILURE will report the right __FILE__ and __LINE__
- */
-#define assertThat(actual,matcher)  \
-    ASSERT_PRED_FORMAT2(assertResult, actual, matcher)
-                            
 
 template<class MatcherPolicy,class ExpectedType, class OutputPolicy = GTestOutputPolicy>
 class Matcher : private MatcherPolicy, private OutputPolicy {
