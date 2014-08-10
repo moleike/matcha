@@ -81,6 +81,14 @@ TEST(Matcha, mapsEquals) {
     assertThat(mapval, equalTo(mapval2));
 }
 
+TEST(Matcha, mapsHasKey) {
+    std::map<int,int> mapval;
+    mapval[0] = 0;
+    mapval[1] = 3;
+    mapval[2] = 3;
+    assertThat(mapval, hasKey(3));
+}
+
 TEST(Matcha, setsEquals) {
     int x[] = {1,2,5,3,4};
     int y[] = {1,2,3,5,5};

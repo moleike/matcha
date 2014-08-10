@@ -241,23 +241,6 @@ private:
     std::string expected_;
 };
 
-struct IsNull {
-protected:
-    template<typename T>
-    bool matches(std::nullptr_t expected, T const* actual) const {
-        return actual == expected;
-    }
-
-    template<typename T>
-    void describe(std::ostream& o, T const& expected) const {
-        o << "null pointer";  
-    }
-};
-
-Matcher<IsNull,std::nullptr_t> null() {
-    return Matcher<IsNull,std::nullptr_t>(nullptr);
-}
-
 struct Is {
 protected:
     template<class Policy, class ExpType, class ActualType>
@@ -292,6 +275,23 @@ protected:
 template<class Policy, class T>
 Matcher<IsNot,Matcher<Policy,T>> operator!(Matcher<Policy,T> const& value) {
     return Matcher<IsNot,Matcher<Policy,T>>(value);
+}
+
+struct IsNull {
+protected:
+    template<typename T>
+    bool matches(std::nullptr_t expected, T const* actual) const {
+        return actual == expected;
+    }
+
+    template<typename T>
+    void describe(std::ostream& o, T const& expected) const {
+        o << "null pointer";  
+    }
+};
+
+Matcher<IsNull,std::nullptr_t> null() {
+    return Matcher<IsNull,std::nullptr_t>(nullptr);
 }
 
 struct IsEqual {
@@ -340,6 +340,11 @@ protected:
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
        o << expected;  
+    }
+
+    template<typename T>
+    void describe(std::ostream& o, T const* expected) const {
+       o << *expected;  
     }
 };
 
@@ -390,6 +395,29 @@ Matcher<IsContaining,T> containing(T const& value) {
 template<typename T, size_t N>
 Matcher<IsContaining,T[N]> containing(T const (&value)[N]) {
     return Matcher<IsContaining,T[N]>(value);
+}
+
+struct IsContainingKey {
+protected:
+    template<typename C, typename T,
+         typename std::enable_if<std::is_same<typename C::key_type,T>::value>::type* = nullptr>
+    bool matches(T const& key, C const& cont) const {
+        for (auto const& val : cont) {
+            if (val.first == key)
+                return true;
+        }
+        return false;
+    }
+
+    template<typename T>
+    void describe(std::ostream& o, T const& expected) const {
+       o << "has key " << expected;  
+    }
+};
+
+template<typename T>
+Matcher<IsContainingKey,T> hasKey(T const& key) {
+    return Matcher<IsContainingKey,T>(key);
 }
 
 struct StringStartsWith {
