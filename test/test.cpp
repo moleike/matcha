@@ -28,32 +28,32 @@
 
 using namespace matcha;
 
-TEST(Matcha, IntegralValues) {
+TEST(Matcha, testIntegralValues) {
     int foo = 5;
     int bar = 5;
     assertThat(foo, is(not(equalTo(bar))));
 }
 
-TEST(Matcha, CArraysContaining) {
+TEST(Matcha, testCArraysContains) {
     int w[] = {1,2,5,3,6};
-    assertThat(w, is(not(contains(6))));
+    assertThat(w, not(contains(6)));
 }
 
-TEST(Matcha, CArraysEquals) {
+TEST(Matcha, testCArraysEquals) {
     int array1[5] = {1,3,3,4,5};
     int array2[6] = {1,2,3,4,5,6};
     assertThat(array1, is(equalTo(array2)));
 }
 
-TEST(Matcha, CStringEquals) {
+TEST(Matcha, testCStringEquals) {
     assertThat("foo", is(equalTo("bar")));
 }
 
-TEST(Matcha, CStringContaining) {
-    assertThat("hello, world", is(not(contains("hello"))));
+TEST(Matcha, testCStringContains) {
+    assertThat("hello, world", not(contains("hello")));
 }
 
-TEST(Matcha, vectorsEquals) {
+TEST(Matcha, testVectorsEquals) {
     std::vector<int> v;
     v.push_back(4);
     std::vector<int> w;
@@ -61,15 +61,15 @@ TEST(Matcha, vectorsEquals) {
     assertThat(v, is(not(equalTo(w))));
 }
 
-TEST(Matcha, vectorsContaining) {
+TEST(Matcha, testVectorsContains) {
     std::vector<int> v;
     v.push_back(3);
     v.push_back(5);
     v.push_back(1);
-    assertThat(v, is(contains(6)));
+    assertThat(v, contains(6));
 }
 
-TEST(Matcha, mapsEquals) {
+TEST(Matcha, testMapsEquals) {
     std::map<int,int> mapval;
     mapval[0] = 0;
     mapval[1] = 3;
@@ -81,7 +81,7 @@ TEST(Matcha, mapsEquals) {
     assertThat(mapval, equalTo(mapval2));
 }
 
-TEST(Matcha, mapContains) {
+TEST(Matcha, testMapContains) {
     std::map<int,int> mapval;
     mapval[0] = 0;
     mapval[1] = 3;
@@ -89,7 +89,7 @@ TEST(Matcha, mapContains) {
     assertThat(mapval, contains(3,3));
 }
 
-TEST(Matcha, mapsHasKey) {
+TEST(Matcha, testMapsHasKey) {
     std::map<int,int> mapval;
     mapval[0] = 0;
     mapval[1] = 3;
@@ -97,7 +97,7 @@ TEST(Matcha, mapsHasKey) {
     assertThat(mapval, hasKey(3));
 }
 
-TEST(Matcha, setsEquals) {
+TEST(Matcha, testSetsEquals) {
     int x[] = {1,2,5,3,4};
     int y[] = {1,2,3,5,5};
     std::set<int> xx(std::begin(x), std::end(x));
@@ -105,17 +105,17 @@ TEST(Matcha, setsEquals) {
     assertThat(xx, equalTo(yy));
 }
 
-TEST(Matcha, NullPointers) {
+TEST(Matcha, testNullPointers) {
     int foo = 0;
     int *p = &foo;
     assertThat(p, is(null()));
 }
 
-TEST(Matcha, StringStartWith) {
+TEST(Matcha, testStringStartWith) {
     assertThat("myStringOfNote", startsWith("you"));
 }
 
-TEST(Matcha, StringEndsWith) {
+TEST(Matcha, testStringEndsWith) {
     assertThat("myStringOfNote", endsWith("Notes"));
 }
 
