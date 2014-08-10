@@ -14,12 +14,23 @@ Matcha should be easily extensible with custom matchers since it uses policy-bas
 Examples
 ========
 ```cpp
-#include "gtest/gtest.h"
-#inlcude \"matcha/matcha.hpp"
+TEST(Matcha, testMyArray) {
+    int w[] = {1,2,5,3,6};
+    assertThat(w, not(contains(6)));
+}
 
 TEST(Matcha, testMyString) {
     assertThat("myStringOfNote", is(anyOf(startsWith("you"), endsWith("Note"))));
 }
+
+TEST(Matcha, testMyVector) {
+    std::vector<int> v;
+    v.push_back(4);
+    std::vector<int> w;
+    w.push_back(4);
+    assertThat(v, is(not(equalTo(w))));
+}
+
 ```
 
 License
