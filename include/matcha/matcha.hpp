@@ -56,6 +56,21 @@ struct is_equality_comparable<T,
     > : std::true_type
 { };
 
+// templated operator<< when type T is not std container (prettyprint)
+// and user-defined insertion operator is not provided
+
+template<typename T, typename TChar, typename TCharTraits>
+typename std::enable_if<
+    !::pretty_print::is_container<T>::value, 
+    std::basic_ostream<TChar, TCharTraits>&
+    >::type
+operator<<(std::basic_ostream<TChar, TCharTraits> &os, const T &)
+{
+    const char s[] = "<unknown-type>";
+    os.write(s, sizeof(s) - 1);
+    return os;
+}
+
 struct DefaultOutputPolicy {
     typedef bool return_type;
 protected:
