@@ -36,8 +36,8 @@ TEST(Matcha, testMyVector) {
 Notes
 =====
 Currently works well with primitive types and std containers. User-defined types must provide:
-- operator== for equality comparison and
-- operator<< for insertion into an output source.
+- *operator==* for equality comparison and
+- *operator<<* for insertion into an output source.
 
 License
 =======
