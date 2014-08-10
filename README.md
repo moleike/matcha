@@ -21,13 +21,17 @@ TEST(Matcha, testMyString) {
 }
 
 TEST(Matcha, testMyVector) {
-    std::vector<int> v;
+    std::vector<int> v, w;
     v.push_back(4);
-    std::vector<int> w;
-    w.push_back(4);
+    w.push_back(5);
     assertThat(v, is(not(equalTo(w))));
 }
 
+TEST(Matcha, testMapContains) {
+    std::map<int,int> u;
+    u[3] = 4;
+    assertThat(u, contains(3,4));
+}
 ```
 
 Notes
