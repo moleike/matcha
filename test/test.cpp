@@ -81,6 +81,14 @@ TEST(Matcha, mapsEquals) {
     assertThat(mapval, equalTo(mapval2));
 }
 
+TEST(Matcha, mapContains) {
+    std::map<int,int> mapval;
+    mapval[0] = 0;
+    mapval[1] = 3;
+    mapval[2] = 3;
+    assertThat(mapval, containing(1,3));
+}
+
 TEST(Matcha, mapsHasKey) {
     std::map<int,int> mapval;
     mapval[0] = 0;

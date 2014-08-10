@@ -397,6 +397,11 @@ Matcher<IsContaining,T[N]> containing(T const (&value)[N]) {
     return Matcher<IsContaining,T[N]>(value);
 }
 
+template<class Key, class T>
+Matcher<IsContaining,std::pair<const Key,T>> containing(Key const& key, T const& value) {
+    return Matcher<IsContaining,std::pair<const Key,T>>(std::pair<const Key,T>(key, value));
+}
+
 struct IsContainingKey {
 protected:
     template<typename C, typename T,
