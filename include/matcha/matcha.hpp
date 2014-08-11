@@ -314,9 +314,10 @@ protected:
     bool matches(T const& expected, T const& actual,
                  typename std::enable_if<
                     !is_equality_comparable<T>::value
+                    && std::is_pod<T>::value
                     >::type* = 0) const
     {
-        return false;
+        return !std::memcmp(&expected, &actual, sizeof expected);
     }
 
     template<typename T>
