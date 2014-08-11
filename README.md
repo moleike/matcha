@@ -36,9 +36,9 @@ TEST(Matcha, testMapContains) {
 
 Notes
 =====
-Currently works well with primitive types and std containers. User-defined types must provide:
-- *operator==* for equality comparison and
-- *operator<<* for insertion into an output source.
+Currently works well with primitive types and std containers. User-defined types should provide:
+- *operator==* for equality comparison unless are plain-old data types
+- *operator<<* for insertion into an output source, printing <unkown-type> otherwise.
 
 License
 =======
