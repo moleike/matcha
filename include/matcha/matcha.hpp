@@ -356,11 +356,6 @@ protected:
     void describe(std::ostream& o, T const& expected) const {
        o << expected;  
     }
-
-    template<typename T>
-    void describe(std::ostream& o, T const* expected) const {
-       o << *expected;  
-    }
 };
 
 template<>
