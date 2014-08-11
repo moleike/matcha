@@ -28,6 +28,17 @@
 
 using namespace matcha;
 
+struct S {
+    int x;
+    int y;
+};
+
+TEST(Matcha, testx) {
+    S a = { 0,1 };
+    S b = { 0,1 };
+    assertThat(a, is(not(equalTo(b))));
+}
+
 TEST(Matcha, testIntegralValues) {
     int foo = 5;
     int bar = 5;
@@ -54,9 +65,8 @@ TEST(Matcha, testCStringContains) {
 }
 
 TEST(Matcha, testVectorsEquals) {
-    std::vector<int> v;
+    std::vector<int> v,w;
     v.push_back(4);
-    std::vector<int> w;
     w.push_back(4);
     assertThat(v, is(not(equalTo(w))));
 }

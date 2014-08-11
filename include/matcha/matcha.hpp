@@ -323,33 +323,10 @@ protected:
     template<typename T>
     bool matches(T const& expected, T const& actual,
                  typename std::enable_if<
-                    !pretty_print::is_container<T>::value
-                    && is_equality_comparable<T>::value
+                    pretty_print::is_container<T>::value
                     >::type* = 0) const
     {
         return expected == actual;
-    }
-
-    template<class T>
-    bool matches(T const& expected, T const& actual,
-                 typename std::enable_if<
-                    pretty_print::has_const_iterator<T>::value>::type* = 0) const
-    {
-        using namespace std;
-        return actual.size() == expected.size() 
-            && mismatch(begin(actual), end(actual), begin(expected)).first == end(actual);
-    }
-
-    template<class T>
-    bool matches(std::set<T> const& expected, std::set<T> const& actual) const
-    {
-        using namespace std;
-        if (actual.size() != expected.size())
-            return false;
-        set<T> result;
-        set_difference(actual.begin(), actual.end(), expected.begin(), expected.end(), 
-            inserter(result, begin(result)));
-        return result.empty();
     }
 
     template<typename T>
