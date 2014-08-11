@@ -313,20 +313,20 @@ protected:
     template<typename T>
     bool matches(T const& expected, T const& actual,
                  typename std::enable_if<
-                    !is_equality_comparable<T>::value
-                    && std::is_pod<T>::value
+                    is_equality_comparable<T>::value
                     >::type* = 0) const
     {
-        return !std::memcmp(&expected, &actual, sizeof expected);
+        return expected == actual;
     }
 
     template<typename T>
     bool matches(T const& expected, T const& actual,
                  typename std::enable_if<
-                    pretty_print::is_container<T>::value
+                    !is_equality_comparable<T>::value
+                    && std::is_pod<T>::value
                     >::type* = 0) const
     {
-        return expected == actual;
+        return !std::memcmp(&expected, &actual, sizeof expected);
     }
 
     template<typename T>
