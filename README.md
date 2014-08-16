@@ -25,8 +25,7 @@ TEST(Matcha, testStringEveryItem) {
     std::vector<std::string> vs;
     vs.push_back("192.168.0.1");
     vs.push_back("192.168.2.1");
-    vs.push_back("192.168.0.5");
-    assertThat(vs, everyItem(startsWith("192.168."))); // ideally we would use a regular expression here
+    assertThat(vs, everyItem(startsWith("192.168.")));
 }
 
 TEST(Matcha, testMyString) {
