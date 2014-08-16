@@ -29,6 +29,7 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <cstring>
 #include <type_traits>
 #include "prettyprint.hpp"
 #include "gtest/gtest.h"
@@ -363,6 +364,15 @@ protected:
         return std::string::npos != actual.find(substr);
     }
 
+    // overload for checking whether container values match a predicate specified by a Matcher
+    template<typename C, typename T, typename Policy,
+         typename std::enable_if<std::is_same<typename C::value_type,T>::value>::type* = nullptr>
+    bool matches(Matcher<Policy,T> const& itemMatcher, C const& cont) const {
+        using namespace std::placeholders;
+        auto pred = std::bind(&Matcher<Policy,T>::template matches<T>, &itemMatcher, _1);
+        return std::all_of(std::begin(cont), std::end(cont), pred);
+    }
+
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
        o << "contains " << expected;  
@@ -387,6 +397,11 @@ Matcher<IsContaining,T[N]> contains(T const (&value)[N]) {
 template<class Key, class T>
 Matcher<IsContaining,std::pair<const Key,T>> contains(Key const& key, T const& value) {
     return Matcher<IsContaining,std::pair<const Key,T>>(std::pair<const Key,T>(key, value));
+}
+
+template<typename T, typename Policy>
+Matcher<IsContaining,Matcher<Policy,T>> everyItem(Matcher<Policy,T> const& itemMatcher) {
+    return Matcher<IsContaining,Matcher<Policy,T>>(itemMatcher);
 }
 
 struct IsContainingKey {

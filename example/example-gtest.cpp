@@ -144,7 +144,15 @@ TEST(Matcha, testAllOf) {
 }
 
 TEST(Matcha, testStringAllof) {
-    assertThat("myStringOfNote", is(allOf(startsWith("you"), endsWith("Note"))));
+    assertThat("myStringOfNote", is(allOf(startsWith("my"), endsWith("Note"))));
+}
+
+TEST(Matcha, testStringEveryItem) {
+    std::vector<std::string> vs;
+    vs.push_back("192.168.0.1");
+    vs.push_back("192.168.2.1");
+    vs.push_back("192.168.0.5");
+    assertThat(vs, everyItem(startsWith("192.168")));
 }
 
 int main(int argc, char **argv)
