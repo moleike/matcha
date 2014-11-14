@@ -30,6 +30,7 @@
 #include <string>
 #include <tuple>
 #include <cstring>
+#include <cctype>
 #include <type_traits>
 #include "prettyprint.hpp"
 #include "gtest/gtest.h"
@@ -70,6 +71,46 @@ operator<<(std::basic_ostream<TChar, TCharTraits> &os, const T &)
     const char s[] = "<unknown-type>";
     os.write(s, sizeof(s) - 1);
     return os;
+}
+
+/*
+ * character traits to provide case-insensitive comparison
+ * http://www.gotw.ca/gotw/029.htm 
+ */
+struct ci_char_traits : public std::char_traits<char> {
+    static bool eq(char c1, char c2) {
+         return std::toupper(c1) == std::toupper(c2);
+     }
+    static bool lt(char c1, char c2) {
+         return std::toupper(c1) <  std::toupper(c2);
+    }
+    static int compare(const char* s1, const char* s2, size_t n) {
+        while (n-- != 0) {
+            if (std::toupper(*s1) < std::toupper(*s2))
+                return -1;
+            if (std::toupper(*s1) > std::toupper(*s2)) 
+                return 1;
+            ++s1; ++s2;
+        }
+        return 0;
+    }
+    static const char* find(const char* s, int n, char a) {
+        auto const ua (std::toupper(a));
+        while (n-- != 0) {
+            if (std::toupper(*s) == ua)
+                return s;
+            s++;
+        }
+        return nullptr;
+    }
+};
+ 
+// case-insensitive string class
+typedef std::basic_string<char, ci_char_traits> ci_string;
+ 
+std::ostream& operator<<(std::ostream& os, const ci_string& str) 
+{
+    return os.write(str.data(), str.size());
 }
 
 struct DefaultOutputPolicy {
@@ -427,6 +468,25 @@ Matcher<IsContainingKey,T> hasKey(T const& key) {
     return Matcher<IsContainingKey,T>(key);
 }
 
+struct IsEqualIgnoringCase {
+protected:
+    bool matches(std::string const& expected, std::string const& actual) const {
+        ci_string ci_exp, ci_act;
+
+        ci_exp.assign(expected.begin(), expected.end());
+        ci_act.assign(actual.begin(), actual.end());
+        return ci_exp == ci_act;
+    }
+
+    void describe(std::ostream& o, std::string const& expected) const {
+       o << "Case insensitive string" << "\"" << expected << "\"";  
+    }
+};
+
+Matcher<IsEqualIgnoringCase,std::string> equalToIgnoringCase(std::string const& val) {
+    return Matcher<IsEqualIgnoringCase,std::string>(val);
+}
+    
 struct StringStartsWith {
 protected:
     bool matches(std::string const& substr, std::string const& actual) const {
