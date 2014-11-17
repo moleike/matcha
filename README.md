@@ -12,6 +12,19 @@ Besides unit testing and mocking frameworks, there are many interesting use case
 
 Matcha follows a [policy-based](http://en.wikipedia.org/wiki/Policy-based_design) class design, where both matchers and result actions are policies, with the aim of simplifying the writing of custom matchers.
 
+Dependencies
+============
+C++11 support; Clang 3.3 or gcc 4.8, and above
+
+Build
+=====
+
+```sh
+mkdir build
+cd build
+cmake ..
+make
+```
 
 Examples
 ========
