@@ -14,8 +14,10 @@ Matcha follows a [policy-based](http://en.wikipedia.org/wiki/Policy-based_design
 
 Dependencies
 ============
-C++11 support; Clang 3.3 or gcc 4.8, and above
-Google Test: downloaded and built as an external project with CMake
+* C++11 support; Clang 3.3 or gcc 4.8, and above
+* Google Test: downloaded and built as an external project with CMake
+* CMake
+
 
 Build
 =====
