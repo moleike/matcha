@@ -159,6 +159,10 @@ TEST(Matcha, testStringIgnoreCase) {
     assertThat("foo", is(equalToIgnoringCase("Foo")));
 }
 
+TEST(Matcha, testStringIgnoreWhiteSpace) {
+    assertThat("   my\tfoo  bar ", is(equalToIgnoringWhiteSpace(" my  foo bar")));
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

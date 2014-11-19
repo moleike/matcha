@@ -479,12 +479,37 @@ protected:
     }
 
     void describe(std::ostream& o, std::string const& expected) const {
-       o << "Case insensitive string" << "\"" << expected << "\"";  
+       o << "Equal to " << "\"" << expected << "\"" << " ignoring case";
     }
 };
 
 Matcher<IsEqualIgnoringCase,std::string> equalToIgnoringCase(std::string const& val) {
     return Matcher<IsEqualIgnoringCase,std::string>(val);
+}
+
+struct IsEqualIgnoringWhiteSpace {
+protected:
+    bool matches(std::string const& expected, std::string const& actual) const {
+        std::string exp(expected), act(actual);
+
+        exp.erase(std::remove_if(exp.begin(),
+                                 exp.end(),
+                                 [](char x){return std::isspace(x);}),
+                  exp.end());
+        act.erase(std::remove_if(act.begin(),
+                                 act.end(),
+                                 [](char x){return std::isspace(x);}),
+                  act.end());
+        return exp == act;
+    }
+
+    void describe(std::ostream& o, std::string const& expected) const {
+       o << "Equal to " << "\"" << expected << "\"" << " ignoring white space";  
+    }
+};
+
+Matcher<IsEqualIgnoringWhiteSpace,std::string> equalToIgnoringWhiteSpace(std::string const& val) {
+    return Matcher<IsEqualIgnoringWhiteSpace,std::string>(val);
 }
     
 struct StringStartsWith {
