@@ -28,6 +28,7 @@ mkdir build
 cd build
 cmake ..
 make
+./test/example_test
 ```
 
 Examples

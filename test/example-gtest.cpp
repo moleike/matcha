@@ -155,6 +155,14 @@ TEST(Matcha, testStringEveryItem) {
     assertThat(vs, everyItem(startsWith("192.168")));
 }
 
+TEST(Matcha, testStringIgnoreCase) {
+    assertThat("foo", is(equalToIgnoringCase("Foo")));
+}
+
+TEST(Matcha, testStringIgnoreWhiteSpace) {
+    assertThat("   my\tfoo  bar ", is(equalToIgnoringWhiteSpace(" my  foo bar")));
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
