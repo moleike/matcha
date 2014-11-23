@@ -38,25 +38,29 @@ TEST(Matcha, testMyArray) {
     int w[] = {1,2,5,3,6};
     assertThat(w, not(contains(6)));
 }
-
+```
+```
 TEST(Matcha, testStringEveryItem) {
     std::vector<std::string> vs;
     vs.push_back("192.168.0.1");
     vs.push_back("192.168.2.1");
     assertThat(vs, everyItem(startsWith("192.168.")));
 }
-
+```
+```
 TEST(Matcha, testMyString) {
     assertThat("myStringOfNote", is(anyOf(startsWith("you"), endsWith("Note"))));
 }
-
+```
+```
 TEST(Matcha, testMyVector) {
     std::vector<int> v, w;
     v.push_back(4);
     w.push_back(5);
     assertThat(v, is(not(equalTo(w))));
 }
-
+```
+```
 TEST(Matcha, testMapContains) {
     std::map<int,int> u;
     u[3] = 4;
