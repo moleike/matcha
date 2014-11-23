@@ -33,7 +33,7 @@ make
 
 Examples
 ========
-```cpp
+```
 TEST(Matcha, testMyArray) {
     int w[] = {1,2,5,3,6};
     assertThat(w, not(contains(6)));
@@ -64,6 +64,33 @@ TEST(Matcha, testMapContains) {
 }
 ```
 
+Writing Custom Matchers
+=======================
+
+Let's write our own matcher for testing if a double value has the value NaN (not a number). This is the test we want to write:
+```
+TEST(NotANumber, testSquareRootOfMinusOneIsNotANumber) {
+    assertThat(std::sqrt(-1), is(notANumber()));
+}
+```
+In matcha, we write policy classes to encapsulate the matcher behaviour, which comprises two methods:
+```
+struct IsNotANumber {
+protected:
+    bool matches(double expected, double actual) const {
+        return expected == actual;
+    }
+    void describe(std::ostream& o, double expected) const {
+       o << expected << " not a number";
+    }
+};
+```
+Matcher is the host class taking as type parameter the policy class and the type of the values it operates on.
+```
+Matcher<IsNotANumber,Double> notANumber() {
+    return Matcher<IsNotANumber,Double>(NAN);
+}
+```
 Notes
 =====
 Currently works well with primitive types and std containers. User-defined types should provide:
