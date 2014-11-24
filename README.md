@@ -79,7 +79,7 @@ TEST(NotANumber, testSquareRootOfMinusOneIsNotANumber) {
 ```
 In matcha, we write policy classes to encapsulate the matcher behaviour, which comprises two methods:
 ```
-struct IsNotANumber {
+class IsNotANumber {
 protected:
     bool matches(double expected, double actual) const {
         return expected == actual;
@@ -91,8 +91,8 @@ protected:
 ```
 Matcher is the host class taking as type parameter the policy class and the type of the values it operates on.
 ```
-Matcher<IsNotANumber,Double> notANumber() {
-    return Matcher<IsNotANumber,Double>(NAN);
+Matcher<IsNotANumber,double> notANumber() {
+    return Matcher<IsNotANumber,double>(NAN);
 }
 ```
 Notes
