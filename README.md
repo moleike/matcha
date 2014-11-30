@@ -93,7 +93,7 @@ protected:
 Matcher is the host class taking as type parameter the policy class:
 ```
 Matcher<IsNotANumber> notANumber() {
-    return Matcher<IsNotANumber>(NAN);
+    return Matcher<IsNotANumber>();
 }
 ```
 There are two other type paramteres: the expected value type, for matchers that have an argument (defaults to void) and the output policy, which defautls to Google Test.
