@@ -86,7 +86,7 @@ protected:
     }
     // describe what you expected
     void describe(std::ostream& o) const {
-       o << "Not a number (NaN);
+       o << "not a number (NaN);
     }
 };
 ```
@@ -98,6 +98,14 @@ Matcher<IsNotANumber> notANumber() {
 ```
 There are two other type paramteres: the expected value type, for matchers that have an argument (defaults to void) and the output policy, which defautls to Google Test.
 
+If the test fails:
+```
+[ RUN      ] TestNaN.SomeValue
+/Users/alex/Playground/matcha/test/example-gtest.cpp:47: Failure
+Expected: is not a number (NaN)
+ but got: 1.0
+[  FAILED  ] TestNaN.SomeValue (0 ms)
+```
 Notes
 =====
 Currently works well with primitive types and std containers. User-defined types should provide:
