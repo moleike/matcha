@@ -81,20 +81,23 @@ In matcha, we write policy classes to encapsulate the matcher behaviour, which c
 ```
 class IsNotANumber {
 protected:
-    bool matches(double expected, double actual) const {
-        return expected == actual;
+    bool matches(double actual) const {
+        return std::isnan(actual);
     }
-    void describe(std::ostream& o, double expected) const {
-       o << expected << " not a number";
+    // describe what you expected
+    void describe(std::ostream& o) const {
+       o << "Not a number (NaN);
     }
 };
 ```
-Matcher is the host class taking as type parameter the policy class and the type of the values it operates on.
+Matcher is the host class taking as type parameter the policy class:
 ```
-Matcher<IsNotANumber,double> notANumber() {
-    return Matcher<IsNotANumber,double>(NAN);
+Matcher<IsNotANumber> notANumber() {
+    return Matcher<IsNotANumber>(NAN);
 }
 ```
+There are two other type paramteres: the expected value type, for matchers that have an argument (defaults to void) and the output policy, which defautls to Google Test.
+
 Notes
 =====
 Currently works well with primitive types and std containers. User-defined types should provide:

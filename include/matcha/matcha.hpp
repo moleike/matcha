@@ -140,7 +140,7 @@ protected:
     }
 };
 
-template<class MatcherPolicy,class ExpectedType, class OutputPolicy = GTestOutputPolicy>
+template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = GTestOutputPolicy>
 class Matcher : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,ExpectedType> type;
@@ -191,6 +191,39 @@ private:
     ExpectedType expected_;
 };
 
+// there is no expected value, for matcher not taking input parameters
+template<class MatcherPolicy, class OutputPolicy>
+class Matcher<MatcherPolicy,void,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+public:
+    typedef Matcher<MatcherPolicy> type;
+
+    template<class ActualType>
+    bool matches(ActualType const& actual) const {
+        return MatcherPolicy::matches(actual);
+    }
+
+    template<class ActualType>
+    friend auto assertResult(const char*, 
+                             const char*,
+                             ActualType const& actual,
+                             type const& matcher) -> typename OutputPolicy::return_type {
+        std::ostringstream sactual, smatcher;
+        sactual << actual;
+        smatcher << matcher;
+        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+        matcher.describe(o);
+        return o; 
+    }
+private:
+    void describe(std::ostream& o) const {
+        MatcherPolicy::describe(o);
+    }
+};
+
+// pointers
 template<class MatcherPolicy, class ExpectedType, class OutputPolicy>
 class Matcher<MatcherPolicy,ExpectedType*,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
