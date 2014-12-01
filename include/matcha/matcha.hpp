@@ -155,7 +155,7 @@ protected:
     }
 };
 
-template<class MatcherPolicy,class ExpectedType, class OutputPolicy = GTestOutputPolicy>
+template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = GTestOutputPolicy>
 class Matcher : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,ExpectedType> type;
@@ -206,6 +206,39 @@ private:
     ExpectedType expected_;
 };
 
+// there is no expected value, for matcher not taking input parameters
+template<class MatcherPolicy, class OutputPolicy>
+class Matcher<MatcherPolicy,void,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+public:
+    typedef Matcher<MatcherPolicy> type;
+
+    template<class ActualType>
+    bool matches(ActualType const& actual) const {
+        return MatcherPolicy::matches(actual);
+    }
+
+    template<class ActualType>
+    friend auto assertResult(const char*, 
+                             const char*,
+                             ActualType const& actual,
+                             type const& matcher) -> typename OutputPolicy::return_type {
+        std::ostringstream sactual, smatcher;
+        sactual << actual;
+        smatcher << matcher;
+        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+        matcher.describe(o);
+        return o; 
+    }
+private:
+    void describe(std::ostream& o) const {
+        MatcherPolicy::describe(o);
+    }
+};
+
+// pointers
 template<class MatcherPolicy, class ExpectedType, class OutputPolicy>
 class Matcher<MatcherPolicy,ExpectedType*,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
@@ -312,7 +345,7 @@ private:
     std::string expected_;
 };
 
-struct Is {
+struct Is_ {
 protected:
     template<class Policy, class ExpType, class ActualType>
     bool matches(Matcher<Policy,ExpType> const& expected, ActualType const& actual) const {
@@ -325,12 +358,15 @@ protected:
     }
 };
 
+template<class T>
+using Is = Matcher<Is_,T>;
+
 template<class Policy, class ExpType>
-Matcher<Is,Matcher<Policy,ExpType>> is(Matcher<Policy,ExpType> const& value) {
-    return Matcher<Is,Matcher<Policy,ExpType>>(value);
+Is<Matcher<Policy,ExpType>> is(Matcher<Policy,ExpType> const& value) {
+    return Is<Matcher<Policy,ExpType>>(value);
 }
 
-struct IsNot {
+struct IsNot_ {
 protected:
     template<class Policy, class ExpType, class ActualType>
     bool matches(Matcher<Policy,ExpType> const& expected, ActualType const& actual) const {
@@ -343,12 +379,16 @@ protected:
     }
 };
 
+template<class T>
+using IsNot = Matcher<IsNot_,T>;
+
+
 template<class Policy, class T>
-Matcher<IsNot,Matcher<Policy,T>> operator!(Matcher<Policy,T> const& value) {
-    return Matcher<IsNot,Matcher<Policy,T>>(value);
+IsNot<Matcher<Policy,T>> operator!(Matcher<Policy,T> const& value) {
+    return IsNot<Matcher<Policy,T>>(value);
 }
 
-struct IsNull {
+struct IsNull_ {
 protected:
     template<typename T>
     bool matches(std::nullptr_t expected, T const* actual) const {
@@ -361,11 +401,13 @@ protected:
     }
 };
 
-Matcher<IsNull,std::nullptr_t> null() {
-    return Matcher<IsNull,std::nullptr_t>(nullptr);
+using IsNull = Matcher<IsNull_,std::nullptr_t>;
+
+IsNull null() {
+    return IsNull(nullptr);
 }
 
-struct IsEqual {
+struct IsEqual_ {
 protected:
     template<typename T>
     bool matches(T const& expected, T const& actual,
@@ -393,21 +435,24 @@ protected:
 };
 
 template<>
-void IsEqual::describe(std::ostream& o, std::string const& expected) const {
+void IsEqual_::describe(std::ostream& o, std::string const& expected) const {
    o << "\"" << expected << "\"";  
 }
 
+template<class T>
+using IsEqual = Matcher<IsEqual_,T>;
+
 template<typename T>
-Matcher<IsEqual,T> equalTo(T const& value) {
-    return Matcher<IsEqual,T>(value);
+IsEqual<T> equalTo(T const& value) {
+    return IsEqual<T>(value);
 }
 
 template<typename T, size_t N>
-Matcher<IsEqual,T[N]> equalTo(T const (&value)[N]) {
-    return Matcher<IsEqual,T[N]>(value);
+IsEqual<T[N]> equalTo(T const (&value)[N]) {
+    return IsEqual<T[N]>(value);
 }
 
-struct IsContaining {
+struct IsContaining_ {
 protected:
     template<typename C, typename T,
          typename std::enable_if<std::is_same<typename C::value_type,T>::value>::type* = nullptr>
@@ -436,28 +481,31 @@ protected:
 };
 
 template<>
-void IsContaining::describe(std::ostream& o, std::string const& expected) const {
+void IsContaining_::describe(std::ostream& o, std::string const& expected) const {
    o << "contains " << "\"" << expected << "\"";  
 }
 
+template<class T>
+using IsContaining = Matcher<IsContaining_,T>;
+
 template<typename T>
-Matcher<IsContaining,T> contains(T const& value) {
-    return Matcher<IsContaining,T>(value);
+IsContaining<T> contains(T const& value) {
+    return IsContaining<T>(value);
 }
 
 template<typename T, size_t N>
-Matcher<IsContaining,T[N]> contains(T const (&value)[N]) {
-    return Matcher<IsContaining,T[N]>(value);
+IsContaining<T[N]> contains(T const (&value)[N]) {
+    return IsContaining<T[N]>(value);
 }
 
 template<class Key, class T>
-Matcher<IsContaining,std::pair<const Key,T>> contains(Key const& key, T const& value) {
-    return Matcher<IsContaining,std::pair<const Key,T>>(std::pair<const Key,T>(key, value));
+IsContaining<std::pair<const Key,T>> contains(Key const& key, T const& value) {
+    return IsContaining<std::pair<const Key,T>>(std::pair<const Key,T>(key, value));
 }
 
 template<typename T, typename Policy>
-Matcher<IsContaining,Matcher<Policy,T>> everyItem(Matcher<Policy,T> const& itemMatcher) {
-    return Matcher<IsContaining,Matcher<Policy,T>>(itemMatcher);
+IsContaining<Matcher<Policy,T>> everyItem(Matcher<Policy,T> const& itemMatcher) {
+    return IsContaining<Matcher<Policy,T>>(itemMatcher);
 }
 
 struct IsContainingKey {
@@ -483,7 +531,7 @@ Matcher<IsContainingKey,T> hasKey(T const& key) {
     return Matcher<IsContainingKey,T>(key);
 }
 
-struct IsEqualIgnoringCase {
+struct IsEqualIgnoringCase_ {
 protected:
     bool matches(std::string const& expected, std::string const& actual) const {
         ci_string ci_exp, ci_act;
@@ -498,8 +546,10 @@ protected:
     }
 };
 
-Matcher<IsEqualIgnoringCase,std::string> equalToIgnoringCase(std::string const& val) {
-    return Matcher<IsEqualIgnoringCase,std::string>(val);
+using IsEqualIgnoringCase = Matcher<IsEqualIgnoringCase_,std::string>;
+
+IsEqualIgnoringCase equalToIgnoringCase(std::string const& val) {
+    return IsEqualIgnoringCase(val);
 }
 
 struct IsEqualIgnoringWhiteSpace {
@@ -527,7 +577,7 @@ Matcher<IsEqualIgnoringWhiteSpace,std::string> equalToIgnoringWhiteSpace(std::st
     return Matcher<IsEqualIgnoringWhiteSpace,std::string>(val);
 }
     
-struct StringStartsWith {
+struct StringStartsWith_ {
 protected:
     bool matches(std::string const& substr, std::string const& actual) const {
         return !actual.compare(0, substr.size(), substr);
@@ -538,11 +588,13 @@ protected:
     }
 };
 
-Matcher<StringStartsWith,std::string> startsWith(std::string const& val) {
-    return Matcher<StringStartsWith,std::string>(val);
+using StringStartsWith = Matcher<StringStartsWith_,std::string>;
+
+StringStartsWith startsWith(std::string const& val) {
+    return StringStartsWith(val);
 }
 
-struct StringEndsWith {
+struct StringEndsWith_ {
 protected:
     bool matches(std::string const& substr, std::string const& actual) const {
         return !actual.compare(actual.size() - substr.size(), substr.size(), substr);
@@ -553,11 +605,13 @@ protected:
     }
 };
 
-Matcher<StringEndsWith,std::string> endsWith(std::string const& val) {
-    return Matcher<StringEndsWith,std::string>(val);
+using StringEndsWith = Matcher<StringEndsWith_,std::string>;
+
+StringEndsWith endsWith(std::string const& val) {
+    return StringEndsWith(val);
 }
 
-struct AnyOf {
+struct AnyOf_ {
 protected:
     template<class PolicyA, class PolicyB, class TA, class TB, class ActualType>
     bool matches(std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers, ActualType const& actual) const {
@@ -571,12 +625,16 @@ protected:
 };
 
 template<class PolicyA, class PolicyB, class TA, class TB>
-Matcher<AnyOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>> 
-anyOf(Matcher<PolicyA,TA> const& matcherA, Matcher<PolicyB,TB> const& matcherB) {
-    return Matcher<AnyOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>(std::make_tuple(matcherA, matcherB));
+using AnyOf = Matcher<AnyOf_,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>;
+
+template<class PolicyA, class PolicyB, class TA, class TB>
+AnyOf<PolicyA,PolicyB,TA,TB> anyOf(Matcher<PolicyA,TA> const& ma, 
+                                   Matcher<PolicyB,TB> const& mb) 
+{
+    return AnyOf<PolicyA,PolicyB,TA,TB>(std::make_tuple(ma, mb));
 }
 
-struct AllOf {
+struct AllOf_ {
 protected:
     template<class PolicyA, class PolicyB, class TA, class TB, class ActualType>
     bool matches(std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers, ActualType const& actual) const {
@@ -590,14 +648,43 @@ protected:
 };
 
 template<class PolicyA, class PolicyB, class TA, class TB>
-Matcher<AllOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>> 
-allOf(Matcher<PolicyA,TA> const& matcherA, Matcher<PolicyB,TB> const& matcherB) {
-    return Matcher<AllOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>(std::make_tuple(matcherA, matcherB));
+using AllOf = Matcher<AllOf_,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>;
+
+template<class PolicyA, class PolicyB, class TA, class TB>
+AllOf<PolicyA,PolicyB,TA,TB> allOf(Matcher<PolicyA,TA> const& ma, 
+                                   Matcher<PolicyB,TB> const& mb) 
+{
+    return AllOf<PolicyA,PolicyB,TA,TB>(std::make_tuple(ma, mb));
 }
 
 struct IsCloseTo {
+    template<typename T>
+    bool matches (std::pair<T,T> const& expected, T const& actual) const {
+        T value = expected.first;
+        T delta = expected.second;
 
+        return std::fabs(actual - value) <= delta;
+    }
+
+    template<typename T>
+    void describe(std::ostream& o, std::pair<T,T> const& expected) const {
+       o << "a numeric value within +/-" << expected.second 
+         << " of " << expected.first;  
+    }
 };
+
+Matcher<IsCloseTo,std::pair<double,double>> closeTo(double operand, double error) {
+    return Matcher<IsCloseTo,std::pair<double,double>>(std::make_pair(operand, error));
+}
+
+Matcher<IsCloseTo,std::pair<float,float>> closeTo(float operand, float error) {
+    return Matcher<IsCloseTo,std::pair<float,float>>(std::make_pair(operand, error));
+}
+
+Matcher<IsCloseTo,std::pair<long double,long double>> closeTo(long double operand, long double error) {
+    return Matcher<IsCloseTo,std::pair<long double,long double>>(std::make_pair(operand, error));
+}
+
 
 } // namespace matcha
 

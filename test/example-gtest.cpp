@@ -33,6 +33,11 @@ struct S {
     int y;
 };
 
+TEST(Matcha, testCloseTo) {
+    assertThat(0.96, is(closeTo(1.0, 0.03)));
+    assertThat(0.96f, is(closeTo(1.0f, 0.03f)));
+}
+
 TEST(Matcha, testx) {
     S a = { 0,1 };
     S b = { 0,1 };
