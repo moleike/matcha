@@ -58,6 +58,21 @@ struct is_equality_comparable<T,
     > : std::true_type
 { };
 
+// SFINAE type trait to detect whether type T satisfies LessThanComparable.
+
+template<typename T, typename = void>
+struct is_lessthan_comparable : std::false_type
+{ };
+
+template<typename T>
+struct is_lessthan_comparable<T,
+    typename std::enable_if<
+        true,
+        decltype((std::declval<T>() < std::declval<T>()), (void)0)
+        >::type
+    > : std::true_type
+{ };
+
 // templated operator<< when type T is not std container (prettyprint)
 // and user-defined insertion operator is not provided
 
@@ -579,6 +594,10 @@ Matcher<AllOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>
 allOf(Matcher<PolicyA,TA> const& matcherA, Matcher<PolicyB,TB> const& matcherB) {
     return Matcher<AllOf,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>(std::make_tuple(matcherA, matcherB));
 }
+
+struct IsCloseTo {
+
+};
 
 } // namespace matcha
 
