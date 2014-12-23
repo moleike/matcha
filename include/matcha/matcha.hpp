@@ -180,16 +180,17 @@ protected:
     }
 };
 
-typedef GTestOutputPolicy DefaultOutputPolicy;
-
-#else
-
-typedef ExceptionOutputPolicy DefaultOutputPolicy;
+#define MATCHA_OUTPUT_POLICY GTestOutputPolicy
 
 #endif
 
+#if !defined(MATCHA_OUTPUT_POLICY)
 
-template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = DefaultOutputPolicy>
+#define MATCHA_OUTPUT_POLICY StandardOutputPolicy
+
+#endif
+
+template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = MATCHA_OUTPUT_POLICY>
 class Matcher : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,ExpectedType> type;
