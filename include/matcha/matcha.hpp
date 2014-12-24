@@ -33,6 +33,8 @@
 #include <cctype>
 #include <type_traits>
 #include "prettyprint.hpp"
+
+#if defined(MATCHA_GTEST)
 #include "gtest/gtest.h"
 
 /* we need the assertThat logic in a macro, so that
@@ -40,6 +42,13 @@
  */
 #define assertThat(actual,matcher)  \
     ASSERT_PRED_FORMAT2(assertResult, actual, matcher)
+
+#else
+
+#define assertThat(actual, matcher) \
+    assertResult(nullptr, nullptr, actual, matcher)
+
+#endif
 
 namespace matcha {
 
@@ -128,17 +137,33 @@ std::ostream& operator<<(std::ostream& os, const ci_string& str)
     return os.write(str.data(), str.size());
 }
 
-struct DefaultOutputPolicy {
+struct StandardOutputPolicy {
     typedef bool return_type;
 protected:
     bool print(std::string const& expected, std::string const& actual, bool assertion) const {
         if (!assertion) {
             std::cout << "Expected: " << expected << "\n but got: " << actual << std::endl;
-            return false; 
+            return false;
         }
         return true;
     }
 };
+
+struct ExceptionOutputPolicy {
+    typedef void return_type;
+protected:
+    void print(std::string const& expected, std::string const& actual, bool assertion) const {
+        if (!assertion) {
+            std::ostringstream ostream;
+            ostream << "Expected: " << expected << "\n but got: " << actual << std::endl;
+            throw std::logic_error(ostream.str());
+            return;
+        }
+        return;
+    }
+};
+
+#if defined(MATCHA_GTEST)
 
 struct GTestOutputPolicy {
     typedef ::testing::AssertionResult return_type;
@@ -155,7 +180,17 @@ protected:
     }
 };
 
-template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = GTestOutputPolicy>
+#define MATCHA_OUTPUT_POLICY GTestOutputPolicy
+
+#endif
+
+#if !defined(MATCHA_OUTPUT_POLICY)
+
+#define MATCHA_OUTPUT_POLICY StandardOutputPolicy
+
+#endif
+
+template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = MATCHA_OUTPUT_POLICY>
 class Matcher : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,ExpectedType> type;
