@@ -24,6 +24,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#define MATCHA_GTEST
 #include "matcha/matcha.hpp"
 
 using namespace matcha;
