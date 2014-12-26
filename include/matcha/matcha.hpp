@@ -693,7 +693,9 @@ AllOf<PolicyA,PolicyB,TA,TB> allOf(Matcher<PolicyA,TA> const& ma,
 }
 
 struct IsCloseTo {
-    template<typename T>
+    template<typename T, 
+             typename = typename 
+               std::enable_if<std::is_floating_point<T>::value>::type>
     bool matches (std::pair<T,T> const& expected, T const& actual) const {
         T value = expected.first;
         T delta = expected.second;
@@ -708,18 +710,10 @@ struct IsCloseTo {
     }
 };
 
-Matcher<IsCloseTo,std::pair<double,double>> closeTo(double operand, double error) {
-    return Matcher<IsCloseTo,std::pair<double,double>>(std::make_pair(operand, error));
+template<typename T>
+Matcher<IsCloseTo,std::pair<T,T>> closeTo(T const& operand, T const& error) {
+    return Matcher<IsCloseTo,std::pair<T,T>>(std::make_pair(operand, error));
 }
-
-Matcher<IsCloseTo,std::pair<float,float>> closeTo(float operand, float error) {
-    return Matcher<IsCloseTo,std::pair<float,float>>(std::make_pair(operand, error));
-}
-
-Matcher<IsCloseTo,std::pair<long double,long double>> closeTo(long double operand, long double error) {
-    return Matcher<IsCloseTo,std::pair<long double,long double>>(std::make_pair(operand, error));
-}
-
 
 } // namespace matcha
 
