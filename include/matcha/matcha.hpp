@@ -32,6 +32,7 @@
 #include <cstring>
 #include <cctype>
 #include <type_traits>
+#include <regex>
 #include "prettyprint.hpp"
 
 #if defined(MATCHA_GTEST)
@@ -714,6 +715,28 @@ template<typename T>
 Matcher<IsCloseTo,std::pair<T,T>> closeTo(T const& operand, T const& error) {
     return Matcher<IsCloseTo,std::pair<T,T>>(std::make_pair(operand, error));
 }
+
+
+struct MatchesPattern_ {
+    bool matches(std::string const& reg, std::string const& actual) const {
+        return std::regex_match(actual, std::regex(reg));
+    }
+
+    void describe(std::ostream& o, std::string const& expected) const {
+       o << "a string matching the pattern " << expected;  
+    }
+};
+
+using MatchesPattern = Matcher<MatchesPattern_,std::string>;
+
+MatchesPattern matchesPattern(std::string const& reg_exp) {
+    return MatchesPattern(reg_exp);
+}
+
+MatchesPattern matches(std::string const& reg_exp) {
+    return MatchesPattern(reg_exp);
+}
+
 
 } // namespace matcha
 

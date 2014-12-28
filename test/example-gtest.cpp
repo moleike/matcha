@@ -29,16 +29,6 @@
 
 using namespace matcha;
 
-TEST(Matcha, testCloseTo) {
-    assertThat(0.98, is(closeTo(1.0, 0.03)));
-    assertThat(0.98f, is(closeTo(1.0f, 0.03f)));
-}
-
-TEST(Matcha, testx) {
-    struct S { int x; int y; } a = { 0,1 }, b = { 0,2 };
-    assertThat(a, is(not(equalTo(b))));
-}
-
 TEST(Matcha, testIntegralValues) {
     int foo = 5;
     int bar = 5;
@@ -150,10 +140,12 @@ TEST(Matcha, testStringAllof) {
 TEST(Matcha, testStringEveryItem) {
     std::vector<std::string> vs;
     vs.push_back("192.168.0.1");
-    vs.push_back("192.168.2.1");
-    vs.push_back("192.168.0.5");
+    vs.push_back("192.168.0.2");
+    vs.push_back("192.168.0.4");
     assertThat(vs, everyItem(startsWith("192.168")));
+    assertThat(vs, everyItem(matches("^192\\.168\\.0\\.[1-3]$")));
 }
+
 
 TEST(Matcha, testStringIgnoreCase) {
     assertThat("foo", is(equalToIgnoringCase("Foo")));
@@ -162,6 +154,21 @@ TEST(Matcha, testStringIgnoreCase) {
 TEST(Matcha, testStringIgnoreWhiteSpace) {
     assertThat("   my\tfoo  bar ", is(equalToIgnoringWhiteSpace(" my  foo bar")));
 }
+
+TEST(Matcha, testRegex) {
+    assertThat("12345a", matchesPattern("[0-9]+"));
+}
+
+TEST(Matcha, testCloseTo) {
+    assertThat(0.98, is(closeTo(1.0, 0.03)));
+    assertThat(0.98f, is(closeTo(1.0f, 0.03f)));
+}
+
+TEST(Matcha, testx) {
+    struct S { int x; int y; } a = { 0,1 }, b = { 0,2 };
+    assertThat(a, is(not(equalTo(b))));
+}
+
 
 int main(int argc, char **argv)
 {

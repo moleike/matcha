@@ -40,14 +40,6 @@ TEST(Matcha, testMyArray) {
 }
 ```
 ```
-TEST(Matcha, testStringEveryItem) {
-    std::vector<std::string> vs;
-    vs.push_back("192.168.0.1");
-    vs.push_back("192.168.2.1");
-    assertThat(vs, everyItem(startsWith("192.168.")));
-}
-```
-```
 TEST(Matcha, testMyString) {
     assertThat("myStringOfNote", is(anyOf(startsWith("you"), endsWith("Note"))));
 }
@@ -65,6 +57,12 @@ TEST(Matcha, testMapContains) {
     std::map<int,int> u;
     u[3] = 4;
     assertThat(u, contains(3,4));
+}
+```
+```
+TEST(Matcha, testStringEveryItem) {
+    std::vector<std::string> ip_addrs{ "192.168.0.1", "192.168.0.7" };
+    assertThat(ip_addrs, everyItem(matches("^192\\.168\\.0\\.[1-9]$")));
 }
 ```
 
