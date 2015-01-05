@@ -209,6 +209,11 @@ public:
         return MatcherPolicy::matches(expected_, wrapper);
     }
 
+    template<size_t M>
+    bool matches(char const (&actual)[M]) const {
+        return MatcherPolicy::matches(expected_, std::string(actual));
+    }
+
     template<class ActualType>
     friend auto assertResult(const char*, 
                              const char*,
@@ -357,6 +362,10 @@ public:
     bool matches(char const (&actual)[M]) const {
         using namespace std;
         return MatcherPolicy::matches(expected_, string(actual));
+    }
+
+    bool matches(std::string const& actual) const {
+      return MatcherPolicy::matches(expected_, actual);
     }
 
     template<size_t M>
@@ -672,25 +681,42 @@ AnyOf<PolicyA,PolicyB,TA,TB> anyOf(Matcher<PolicyA,TA> const& ma,
 
 struct AllOf_ {
 protected:
-    template<class PolicyA, class PolicyB, class TA, class TB, class ActualType>
-    bool matches(std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers, ActualType const& actual) const {
-        return std::get<0>(matchers).matches(actual) && std::get<1>(matchers).matches(actual);
+    template<class ActualType, std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I == sizeof...(Tp), bool>::type
+    matches(std::tuple<Tp...> const& t, ActualType const& actual) const {
+        return true;
     }
 
-    template<class PolicyA, class PolicyB, class TA, class TB>
-    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers) const {
-        o << "all of " << std::get<0>(matchers) << " and " <<  std::get<1>(matchers);  
+    template<class ActualType, std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I < sizeof...(Tp), bool>::type
+    matches(std::tuple<Tp...> const& t, ActualType const& actual) const {
+        return std::get<I>(t).matches(actual) && matches<ActualType, I + 1, Tp...>(t, actual);
+    }
+
+    template<typename... Tp>
+    void describe(std::ostream& o, std::tuple<Tp...> const& t) const {
+        o << "all of ";  
+        printall(o, t);
+    }
+
+private:
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I == sizeof...(Tp) - 1, void>::type
+    printall(std::ostream& o, std::tuple<Tp...> const& t) const {
+        o << std::get<I>(t) << ".";  
+    }
+
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I < sizeof...(Tp) - 1, void>::type
+    printall(std::ostream& o, std::tuple<Tp...> const& t) const {
+        o << std::get<I>(t) << " and ";  
+        printall<I + 1, Tp...>(o, t);
     }
 };
 
-template<class PolicyA, class PolicyB, class TA, class TB>
-using AllOf = Matcher<AllOf_,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>;
-
-template<class PolicyA, class PolicyB, class TA, class TB>
-AllOf<PolicyA,PolicyB,TA,TB> allOf(Matcher<PolicyA,TA> const& ma, 
-                                   Matcher<PolicyB,TB> const& mb) 
-{
-    return AllOf<PolicyA,PolicyB,TA,TB>(std::make_tuple(ma, mb));
+template<typename First, typename... Args>
+Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
+  return Matcher<AllOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
 struct IsCloseTo {

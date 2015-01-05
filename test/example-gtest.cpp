@@ -130,11 +130,11 @@ TEST(Matcha, testAllOf) {
     std::vector<int> v;
     v.push_back(4);
     v.push_back(5);
-    assertThat(v, allOf(contains(4), contains(6)));
+    assertThat(v, allOf(contains(4), contains(5), contains(6)));
 }
 
 TEST(Matcha, testStringAllof) {
-    assertThat("myStringOfNote", is(allOf(startsWith("my"), endsWith("Note"))));
+    assertThat("myStringOfNote", is(allOf(startsWith("my"), endsWith("Notes"))));
 }
 
 TEST(Matcha, testStringEveryItem) {
