@@ -209,6 +209,12 @@ public:
         return MatcherPolicy::matches(expected_, wrapper);
     }
 
+    template<size_t N>
+    bool matches(char const (&actual)[N]) const {
+        using namespace std;
+        return MatcherPolicy::matches(expected_, string(actual));
+    }
+
     template<class ActualType>
     friend auto assertResult(const char*, 
                              const char*,
@@ -357,6 +363,10 @@ public:
     bool matches(char const (&actual)[M]) const {
         using namespace std;
         return MatcherPolicy::matches(expected_, string(actual));
+    }
+
+    bool matches(std::string const& actual) const {
+        return MatcherPolicy::matches(expected_, actual);
     }
 
     template<size_t M>
@@ -565,6 +575,29 @@ protected:
 template<typename T>
 Matcher<IsContainingKey,T> hasKey(T const& key) {
     return Matcher<IsContainingKey,T>(key);
+}
+
+struct IsIn_ {
+protected:
+    template<typename C, typename T,
+         typename std::enable_if<std::is_same<typename C::value_type,T>::value>::type* = nullptr>
+    bool matches(C const& cont, T const& item) const {
+        return std::end(cont) != std::find(std::begin(cont), std::end(cont), item);
+    }
+
+    template<typename C>
+    void describe(std::ostream& o, C const& expected) const {
+       o << "one of " << expected;  
+    }
+    
+};
+
+template<typename C>
+using IsIn = Matcher<IsIn_,C>;
+
+template<typename C>
+IsIn<C> in(C const& cont) {
+    return IsIn<C>(cont);
 }
 
 struct IsEqualIgnoringCase_ {

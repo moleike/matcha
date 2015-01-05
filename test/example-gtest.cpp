@@ -169,6 +169,10 @@ TEST(Matcha, testx) {
     assertThat(a, is(not(equalTo(b))));
 }
 
+typedef std::vector<std::string> stringlist;
+TEST(Matcha, testStringInArray) {
+    assertThat("baz", is(in(stringlist{"bar","foo"})));
+}
 
 int main(int argc, char **argv)
 {
