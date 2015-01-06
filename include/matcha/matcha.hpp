@@ -598,6 +598,18 @@ IsIn<C> in(C const& cont) {
     return IsIn<C>(cont);
 }
 
+template<typename T, typename... Args>
+IsIn<std::vector<T>> oneOf(T const& first, Args const& ... args) {
+    std::vector<T> cont{first, args...};
+    return IsIn<std::vector<T>>(cont);
+}
+
+template<size_t M, size_t... N>
+IsIn<std::vector<std::string>> oneOf(const char (&first)[M], const char (&...args)[N]) {
+    std::vector<std::string> cont{first, args...};
+    return IsIn<std::vector<std::string>>(cont);
+}
+
 struct IsEqualIgnoringCase_ {
 protected:
     bool matches(std::string const& expected, std::string const& actual) const {

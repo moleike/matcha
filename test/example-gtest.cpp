@@ -174,6 +174,16 @@ TEST(Matcha, testStringInArray) {
     assertThat("baz", is(in(stringlist{"bar","foo"})));
 }
 
+TEST(Matcha, testIntIsOneOf) {
+    int i = 1, j =2, k =3;
+    assertThat(i, is(oneOf(j,k)));
+    assertThat(4, is(oneOf(1,2,3)));
+}
+
+TEST(Matcha, testStringIsOneOf) {
+    assertThat("baz", is(oneOf("bar", "foo", "qux", "quux")));
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
