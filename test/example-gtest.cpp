@@ -123,14 +123,14 @@ TEST(Matcha, testAnyOf) {
     std::vector<int> v;
     v.push_back(4);
     v.push_back(5);
-    assertThat(v, is(anyOf(contains(3), contains(6))));
+    assertThat(v, is(anyOf(contains(2), contains(3), contains(6))));
 }
 
 TEST(Matcha, testAllOf) {
     std::vector<int> v;
     v.push_back(4);
     v.push_back(5);
-    assertThat(v, allOf(contains(4), contains(5), contains(6)));
+    assertThat(v, is(allOf(contains(4), contains(5), contains(6))));
 }
 
 TEST(Matcha, testStringAllof) {
