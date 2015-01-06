@@ -2,7 +2,7 @@
 /* test.cpp: Google Test example
  *
  * Copyright (C) 2014 Alexandre Moreno
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,14 +123,14 @@ TEST(Matcha, testAnyOf) {
     std::vector<int> v;
     v.push_back(4);
     v.push_back(5);
-    assertThat(v, is(anyOf(contains(3), contains(6))));
+    assertThat(v, is(anyOf(contains(2), contains(3), contains(6))));
 }
 
 TEST(Matcha, testAllOf) {
     std::vector<int> v;
     v.push_back(4);
     v.push_back(5);
-    assertThat(v, allOf(contains(4), contains(5), contains(6)));
+    assertThat(v, is(allOf(contains(4), contains(5), contains(6))));
 }
 
 TEST(Matcha, testStringAllof) {

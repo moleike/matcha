@@ -2,7 +2,7 @@
 /* matcha.hpp: matcher objects for GoogleTest
  *
  * Copyright (C) 2014 Alexandre Moreno
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <iterator> 
+#include <iterator>
 #include <functional>
 #include <set>
 #include <vector>
@@ -83,12 +83,30 @@ struct is_lessthan_comparable<T,
     > : std::true_type
 { };
 
-// templated operator<< when type T is not std container (prettyprint)
+// SFINAE type trait to detect whether T and all of the Rest name the same type.
+
+template<typename T, typename... Rest>
+struct is_same : std::false_type
+{ };
+
+template<typename T, typename First>
+struct is_same<T, First> : std::is_same<T, First>
+{ };
+
+template<typename T, typename First, typename... Rest>
+struct is_same<T, First, Rest...>
+    : std::integral_constant<
+        bool,
+        std::is_same<T, First>::value && is_same<T, Rest...>::value
+      >
+{ };
+
+// templated operator<< when type T is not std container (using prettyprint)
 // and user-defined insertion operator is not provided
 
 template<typename T, typename TChar, typename TCharTraits>
 typename std::enable_if<
-    !::pretty_print::is_container<T>::value, 
+    !::pretty_print::is_container<T>::value,
     std::basic_ostream<TChar, TCharTraits>&
     >::type
 operator<<(std::basic_ostream<TChar, TCharTraits> &os, const T &)
@@ -100,7 +118,7 @@ operator<<(std::basic_ostream<TChar, TCharTraits> &os, const T &)
 
 /*
  * character traits to provide case-insensitive comparison
- * http://www.gotw.ca/gotw/029.htm 
+ * http://www.gotw.ca/gotw/029.htm
  */
 struct ci_char_traits : public std::char_traits<char> {
     static bool eq(char c1, char c2) {
@@ -113,7 +131,7 @@ struct ci_char_traits : public std::char_traits<char> {
         while (n-- != 0) {
             if (std::toupper(*s1) < std::toupper(*s2))
                 return -1;
-            if (std::toupper(*s1) > std::toupper(*s2)) 
+            if (std::toupper(*s1) > std::toupper(*s2))
                 return 1;
             ++s1; ++s2;
         }
@@ -129,11 +147,11 @@ struct ci_char_traits : public std::char_traits<char> {
         return nullptr;
     }
 };
- 
+
 // case-insensitive string class
 typedef std::basic_string<char, ci_char_traits> ci_string;
- 
-std::ostream& operator<<(std::ostream& os, const ci_string& str) 
+
+std::ostream& operator<<(std::ostream& os, const ci_string& str)
 {
     return os.write(str.data(), str.size());
 }
@@ -170,11 +188,11 @@ struct GTestOutputPolicy {
     typedef ::testing::AssertionResult return_type;
 protected:
     // Google Test implementation of matcher assertions
-    ::testing::AssertionResult print(std::string const& expected, 
-                                     std::string const& actual, 
+    ::testing::AssertionResult print(std::string const& expected,
+                                     std::string const& actual,
                                      bool assertion) const {
         if (!assertion) {
-            return ::testing::AssertionFailure() 
+            return ::testing::AssertionFailure()
                    << "Expected: " << expected << "\n but got: " << actual;
         }
         return ::testing::AssertionSuccess();
@@ -215,7 +233,7 @@ public:
     }
 
     template<class ActualType>
-    friend auto assertResult(const char*, 
+    friend auto assertResult(const char*,
                              const char*,
                              ActualType const& actual,
                              type const& matcher) -> typename OutputPolicy::return_type {
@@ -238,7 +256,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
         matcher.describe(o);
-        return o; 
+        return o;
     }
 private:
     void describe(std::ostream& o) const {
@@ -259,7 +277,7 @@ public:
     }
 
     template<class ActualType>
-    friend auto assertResult(const char*, 
+    friend auto assertResult(const char*,
                              const char*,
                              ActualType const& actual,
                              type const& matcher) -> typename OutputPolicy::return_type {
@@ -271,7 +289,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
         matcher.describe(o);
-        return o; 
+        return o;
     }
 private:
     void describe(std::ostream& o) const {
@@ -294,7 +312,7 @@ public:
     template<class ActualType>
     friend auto assertResult(const char*,
                              const char*,
-                             ActualType const* actual, 
+                             ActualType const* actual,
                              type const& matcher) -> typename OutputPolicy::return_type {
         std::ostringstream sactual, smatcher;
         sactual << actual;
@@ -304,7 +322,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
         matcher.describe(o);
-        return o; 
+        return o;
     }
 private:
     void describe(std::ostream& o) const {
@@ -318,7 +336,7 @@ template<class MatcherPolicy, class ExpectedType, size_t N, class OutputPolicy>
 class Matcher<MatcherPolicy,ExpectedType[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,ExpectedType[N]> type;
-    Matcher(ExpectedType const (&value)[N]) 
+    Matcher(ExpectedType const (&value)[N])
         : expected_(std::begin(value), std::end(value)) { }
 
     template<size_t M>
@@ -330,7 +348,7 @@ public:
     template<size_t M>
     friend auto assertResult(const char*,
                              const char*,
-                             ExpectedType const (&actual)[M], 
+                             ExpectedType const (&actual)[M],
                              type const& matcher) -> typename OutputPolicy::return_type {
         std::ostringstream sactual, smatcher;
         sactual << actual;
@@ -340,7 +358,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
         matcher.describe(o);
-        return o; 
+        return o;
     }
 private:
     void describe(std::ostream& o) const {
@@ -355,7 +373,7 @@ template<class MatcherPolicy, size_t N, class OutputPolicy>
 class Matcher<MatcherPolicy,char[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,char[N]> type;
-    Matcher(char const (&value)[N]) 
+    Matcher(char const (&value)[N])
         : expected_(value) { }
 
     template<size_t M>
@@ -380,7 +398,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
         matcher.describe(o);
-        return o; 
+        return o;
     }
 private:
     void describe(std::ostream& o) const {
@@ -398,7 +416,7 @@ protected:
 
     template<class Policy, class ExpType>
     void describe(std::ostream& o, Matcher<Policy,ExpType> const& expected) const {
-        o << "is " << expected;  
+        o << "is " << expected;
     }
 };
 
@@ -419,7 +437,7 @@ protected:
 
     template<class Policy, class ExpType>
     void describe(std::ostream& o, Matcher<Policy,ExpType> const& expected) const {
-        o << "not " << expected;  
+        o << "not " << expected;
     }
 };
 
@@ -441,7 +459,7 @@ protected:
 
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
-        o << "null pointer";  
+        o << "null pointer";
     }
 };
 
@@ -474,13 +492,13 @@ protected:
 
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
-       o << expected;  
+       o << expected;
     }
 };
 
 template<>
 void IsEqual_::describe(std::ostream& o, std::string const& expected) const {
-   o << "\"" << expected << "\"";  
+   o << "\"" << expected << "\"";
 }
 
 template<class T>
@@ -520,13 +538,13 @@ protected:
 
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
-       o << "contains " << expected;  
+       o << "contains " << expected;
     }
 };
 
 template<>
 void IsContaining_::describe(std::ostream& o, std::string const& expected) const {
-   o << "contains " << "\"" << expected << "\"";  
+   o << "contains " << "\"" << expected << "\"";
 }
 
 template<class T>
@@ -566,7 +584,7 @@ protected:
 
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
-       o << "has key " << expected;  
+       o << "has key " << expected;
     }
 };
 
@@ -585,9 +603,9 @@ protected:
 
     template<typename C>
     void describe(std::ostream& o, C const& expected) const {
-       o << "one of " << expected;  
+       o << "one of " << expected;
     }
-    
+
 };
 
 template<typename C>
@@ -648,22 +666,22 @@ protected:
     }
 
     void describe(std::ostream& o, std::string const& expected) const {
-       o << "Equal to " << "\"" << expected << "\"" << " ignoring white space";  
+       o << "Equal to " << "\"" << expected << "\"" << " ignoring white space";
     }
 };
 
 Matcher<IsEqualIgnoringWhiteSpace,std::string> equalToIgnoringWhiteSpace(std::string const& val) {
     return Matcher<IsEqualIgnoringWhiteSpace,std::string>(val);
 }
-    
+
 struct StringStartsWith_ {
 protected:
     bool matches(std::string const& substr, std::string const& actual) const {
         return !actual.compare(0, substr.size(), substr);
     }
-    
+
     void describe(std::ostream& o, std::string const& expected) const {
-       o << "starts with " << "\"" << expected << "\"";  
+       o << "starts with " << "\"" << expected << "\"";
     }
 };
 
@@ -678,9 +696,9 @@ protected:
     bool matches(std::string const& substr, std::string const& actual) const {
         return !actual.compare(actual.size() - substr.size(), substr.size(), substr);
     }
-    
+
     void describe(std::ostream& o, std::string const& expected) const {
-       o << "ends with " << "\"" << expected << "\"";  
+       o << "ends with " << "\"" << expected << "\"";
     }
 };
 
@@ -692,25 +710,42 @@ StringEndsWith endsWith(std::string const& val) {
 
 struct AnyOf_ {
 protected:
-    template<class PolicyA, class PolicyB, class TA, class TB, class ActualType>
-    bool matches(std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers, ActualType const& actual) const {
-        return std::get<0>(matchers).matches(actual) || std::get<1>(matchers).matches(actual);
+    template<class ActualType, std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I == sizeof...(Tp), bool>::type
+    matches(std::tuple<Tp...> const& t, ActualType const& actual) const {
+        return false;
     }
 
-    template<class PolicyA, class PolicyB, class TA, class TB>
-    void describe(std::ostream& o, std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>> const& matchers) const {
-        o << "any of " << std::get<0>(matchers) << " or " <<  std::get<1>(matchers);  
+    template<class ActualType, std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I < sizeof...(Tp), bool>::type
+    matches(std::tuple<Tp...> const& t, ActualType const& actual) const {
+        return std::get<I>(t).matches(actual) || matches<ActualType, I + 1, Tp...>(t, actual);
+    }
+
+    template<typename... Tp>
+    void describe(std::ostream& o, std::tuple<Tp...> const& t) const {
+        o << "any of ";
+        printall(o, t);
+    }
+
+private:
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I == sizeof...(Tp) - 1, void>::type
+    printall(std::ostream& o, std::tuple<Tp...> const& t) const {
+        o << std::get<I>(t) << ".";
+    }
+
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I < sizeof...(Tp) - 1, void>::type
+    printall(std::ostream& o, std::tuple<Tp...> const& t) const {
+        o << std::get<I>(t) << " or ";
+        printall<I + 1, Tp...>(o, t);
     }
 };
 
-template<class PolicyA, class PolicyB, class TA, class TB>
-using AnyOf = Matcher<AnyOf_,std::tuple<Matcher<PolicyA,TA>,Matcher<PolicyB,TB>>>;
-
-template<class PolicyA, class PolicyB, class TA, class TB>
-AnyOf<PolicyA,PolicyB,TA,TB> anyOf(Matcher<PolicyA,TA> const& ma, 
-                                   Matcher<PolicyB,TB> const& mb) 
-{
-    return AnyOf<PolicyA,PolicyB,TA,TB>(std::make_tuple(ma, mb));
+template<typename First, typename... Args>
+Matcher<AnyOf_,std::tuple<First,Args...>> anyOf(First first, Args... args) {
+    return Matcher<AnyOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
 struct AllOf_ {
@@ -729,7 +764,7 @@ protected:
 
     template<typename... Tp>
     void describe(std::ostream& o, std::tuple<Tp...> const& t) const {
-        o << "all of ";  
+        o << "all of ";
         printall(o, t);
     }
 
@@ -737,25 +772,25 @@ private:
     template<std::size_t I = 0, typename... Tp>
     typename std::enable_if<I == sizeof...(Tp) - 1, void>::type
     printall(std::ostream& o, std::tuple<Tp...> const& t) const {
-        o << std::get<I>(t) << ".";  
+        o << std::get<I>(t) << ".";
     }
 
     template<std::size_t I = 0, typename... Tp>
     typename std::enable_if<I < sizeof...(Tp) - 1, void>::type
     printall(std::ostream& o, std::tuple<Tp...> const& t) const {
-        o << std::get<I>(t) << " and ";  
+        o << std::get<I>(t) << " and ";
         printall<I + 1, Tp...>(o, t);
     }
 };
 
 template<typename First, typename... Args>
 Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
-  return Matcher<AllOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
+    return Matcher<AllOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
 struct IsCloseTo {
-    template<typename T, 
-             typename = typename 
+    template<typename T,
+             typename = typename
                std::enable_if<std::is_floating_point<T>::value>::type>
     bool matches (std::pair<T,T> const& expected, T const& actual) const {
         T value = expected.first;
@@ -766,8 +801,8 @@ struct IsCloseTo {
 
     template<typename T>
     void describe(std::ostream& o, std::pair<T,T> const& expected) const {
-       o << "a numeric value within +/-" << expected.second 
-         << " of " << expected.first;  
+       o << "a numeric value within +/-" << expected.second
+         << " of " << expected.first;
     }
 };
 
@@ -783,7 +818,7 @@ struct MatchesPattern_ {
     }
 
     void describe(std::ostream& o, std::string const& expected) const {
-       o << "a string matching the pattern " << expected;  
+       o << "a string matching the pattern " << expected;
     }
 };
 
