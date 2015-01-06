@@ -83,7 +83,25 @@ struct is_lessthan_comparable<T,
     > : std::true_type
 { };
 
-// templated operator<< when type T is not std container (prettyprint)
+// SFINAE type trait to detect whether T and all of the Rest name the same type.
+
+template<typename T, typename... Rest>
+struct is_same : std::false_type
+{ };
+
+template<typename T, typename First>
+struct is_same<T, First> : std::is_same<T, First>
+{ };
+
+template<typename T, typename First, typename... Rest>
+struct is_same<T, First, Rest...>
+    : std::integral_constant<
+        bool,
+        std::is_same<T, First>::value && is_same<T, Rest...>::value
+      >
+{ };
+
+// templated operator<< when type T is not std container (using prettyprint)
 // and user-defined insertion operator is not provided
 
 template<typename T, typename TChar, typename TCharTraits>
