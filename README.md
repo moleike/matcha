@@ -61,9 +61,9 @@ Matcher<IsNotANumber> notANumber() {
     return Matcher<IsNotANumber>();
 }
 ```
-There are two other type paramteres: the expected value type, for matchers that have an argument (defaults to void) and the output policy, which defautls to Google Test.
+There are two other type paramteres: the expected value type, for matchers that have an argument (defaults to void) and the output policy, which defaults to stdout.
 
-If the test fails:
+For example, the result of the failure using GTest:
 ```
 [ RUN      ] TestNaN.SomeValue
 /Users/alex/Playground/matcha/test/example-gtest.cpp:47: Failure
