@@ -188,9 +188,9 @@ struct GTestOutputPolicy {
     typedef ::testing::AssertionResult return_type;
 protected:
     // Google Test implementation of matcher assertions
-    ::testing::AssertionResult print(std::string const& expected,
-                                     std::string const& actual,
-                                     bool assertion) const {
+    return_type print(std::string const& expected,
+                      std::string const& actual,
+                      bool assertion) const {
         if (!assertion) {
             return ::testing::AssertionFailure()
                    << "Expected: " << expected << "\n but got: " << actual;
@@ -200,6 +200,26 @@ protected:
 };
 
 #define MATCHA_OUTPUT_POLICY GTestOutputPolicy
+
+#elif defined(MATCHA_BTEST)
+
+struct BTestOutputPolicy {
+    typedef boost::test_tools::predicate_result return_type;
+protected:
+    // Boost Test implementation of matcher assertions
+    return_type print(std::string const& expected,
+                      std::string const& actual,
+                      bool assertion) const {
+        if (!assertion) {
+            boost::test_tools::predicate_result res(false);
+            res.message() << "Expected: " << expected << "\n but got: " << actual;
+            return res;
+        }
+        return true;
+    }
+};
+
+#define MATCHA_OUTPUT_POLICY BTestOutputPolicy
 
 #endif
 
