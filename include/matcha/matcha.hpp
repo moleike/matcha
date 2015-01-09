@@ -44,6 +44,15 @@
 #define assertThat(actual,matcher)  \
     ASSERT_PRED_FORMAT2(assertResult, actual, matcher)
 
+#elif defined(MATCHA_BOOSTTEST)
+#include <boost/test/included/unit_test.hpp>
+
+/* we override default behaviour (stringying the assertion) and
+ * provide an empty string here, and the matcher description in the result
+ */
+#define assertThat(actual,matcher)  \
+  BOOST_CHECK_MESSAGE(assertResult(nullptr, nullptr, actual, matcher), "")
+
 #else
 
 #define assertThat(actual, matcher) \
@@ -201,7 +210,7 @@ protected:
 
 #define MATCHA_OUTPUT_POLICY GTestOutputPolicy
 
-#elif defined(MATCHA_BTEST)
+#elif defined(MATCHA_BOOSTTEST)
 
 struct BTestOutputPolicy {
     typedef boost::test_tools::predicate_result return_type;
@@ -212,7 +221,7 @@ protected:
                       bool assertion) const {
         if (!assertion) {
             boost::test_tools::predicate_result res(false);
-            res.message() << "Expected: " << expected << "\n but got: " << actual;
+            res.message() << "\nExpected: " << expected << "\n but got: " << actual;
             return res;
         }
         return true;
@@ -551,8 +560,7 @@ protected:
     template<typename C, typename T, typename Policy,
          typename std::enable_if<std::is_same<typename C::value_type,T>::value>::type* = nullptr>
     bool matches(Matcher<Policy,T> const& itemMatcher, C const& cont) const {
-        using namespace std::placeholders;
-        auto pred = std::bind(&Matcher<Policy,T>::template matches<T>, &itemMatcher, _1);
+        auto pred = std::bind(&Matcher<Policy,T>::template matches<T>, &itemMatcher, std::placeholders::_1);
         return std::all_of(std::begin(cont), std::end(cont), pred);
     }
 

@@ -5,6 +5,7 @@ project(matcha CXX)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include/matcha)
 
-#include(ext/gtest.cmake)
+include(ext/gtest.cmake)
+include(ext/boost.cmake)
 add_subdirectory(test)
 
