@@ -184,6 +184,11 @@ TEST(Matcha, testStringIsOneOf) {
     assertThat("baz", is(oneOf("bar", "foo", "qux", "quux")));
 }
 
+TEST(Matcha, testVectorIsNotEmpty) {
+    std::vector<int> v;
+    assertThat(v, is(not(empty())));
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);

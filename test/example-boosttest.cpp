@@ -186,3 +186,8 @@ BOOST_AUTO_TEST_CASE(testStringIsOneOf) {
     assertThat("baz", is(oneOf("bar", "foo", "qux", "quux")));
 }
 
+BOOST_AUTO_TEST_CASE(testVectorIsNotEmpty) {
+    std::vector<int> v;
+    assertThat(v, is(not(empty())));
+}
+

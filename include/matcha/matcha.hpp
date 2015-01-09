@@ -656,6 +656,25 @@ IsIn<std::vector<std::string>> oneOf(const char (&first)[M], const char (&...arg
     return IsIn<std::vector<std::string>>(cont);
 }
 
+struct IsEmpty_ {
+protected:
+    template<typename C, typename std::enable_if<
+            pretty_print::is_container<C>::value>::type* = nullptr>
+    bool matches(C const& actual) const {
+        return actual.empty();
+    }
+
+    void describe(std::ostream& o) const {
+        o << "an empty container";
+    }
+};
+
+using IsEmpty = Matcher<IsEmpty_>;
+
+IsEmpty empty() {
+    return IsEmpty();
+}
+
 struct IsEqualIgnoringCase_ {
 protected:
     bool matches(std::string const& expected, std::string const& actual) const {
