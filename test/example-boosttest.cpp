@@ -191,3 +191,8 @@ BOOST_AUTO_TEST_CASE(testVectorIsNotEmpty) {
     assertThat(v, is(not(empty())));
 }
 
+BOOST_AUTO_TEST_CASE(testStringIsEmpty) {
+    std::string s("foo");
+    assertThat(s, is(emptyString()));
+}
+

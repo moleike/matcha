@@ -675,6 +675,23 @@ IsEmpty empty() {
     return IsEmpty();
 }
 
+struct IsEmptyString_ {
+protected:
+    bool matches(std::string const& actual) const {
+        return actual.empty();
+    }
+
+    void describe(std::ostream& o) const {
+        o << "an empty string";
+    }
+};
+
+using IsEmptyString = Matcher<IsEmptyString_>;
+
+IsEmptyString emptyString() {
+    return IsEmptyString();
+}
+
 struct IsEqualIgnoringCase_ {
 protected:
     bool matches(std::string const& expected, std::string const& actual) const {

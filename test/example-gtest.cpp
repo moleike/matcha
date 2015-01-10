@@ -189,6 +189,11 @@ TEST(Matcha, testVectorIsNotEmpty) {
     assertThat(v, is(not(empty())));
 }
 
+TEST(Matcha, testStringIsEmpty) {
+    std::string s("foo");
+    assertThat(s, is(emptyString()));
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
