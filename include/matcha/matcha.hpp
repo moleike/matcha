@@ -896,6 +896,67 @@ MatchesPattern matches(std::string const& reg_exp) {
     return MatchesPattern(reg_exp);
 }
 
+template<typename F>
+struct OrderingComparison {
+protected:
+    template<typename T>
+    bool matches(T const& expected, T const& actual) const {
+        F op = F();
+        return op(actual, expected);
+    }
+};
+
+template<typename T>
+struct LessThan : OrderingComparison<std::less<T>> {
+protected:
+    void describe(std::ostream& o, T const& expected) const {
+        o << "less than " << expected;
+    }
+};
+
+template<typename T>
+Matcher<LessThan<T>,T> lessThan(T const& value) {
+    return Matcher<LessThan<T>,T>(value);
+}
+
+template<typename T>
+struct GreaterThan : OrderingComparison<std::greater<T>> {
+protected:
+    void describe(std::ostream& o, T const& expected) const {
+        o << "greater than " << expected;
+    }
+};
+
+template<typename T>
+Matcher<GreaterThan<T>,T> greaterThan(T const& value) {
+    return Matcher<GreaterThan<T>,T>(value);
+}
+
+template<typename T>
+struct GreaterThanOrEqual : OrderingComparison<std::greater_equal<T>> {
+protected:
+    void describe(std::ostream& o, T const& expected) const {
+        o << "greater than or equal to " << expected;
+    }
+};
+
+template<typename T>
+Matcher<GreaterThanOrEqual<T>,T> greaterThanOrEqualTo(T const& value) {
+    return Matcher<GreaterThanOrEqual<T>,T>(value);
+}
+
+template<typename T>
+struct LessThanOrEqual : OrderingComparison<std::less_equal<T>> {
+protected:
+    void describe(std::ostream& o, T const& expected) const {
+        o << "less than or equal to " << expected;
+    }
+};
+
+template<typename T>
+Matcher<LessThanOrEqual<T>,T> lessThanOrEqualTo(T const& value) {
+    return Matcher<LessThanOrEqual<T>,T>(value);
+}
 
 } // namespace matcha
 

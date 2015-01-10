@@ -196,3 +196,19 @@ BOOST_AUTO_TEST_CASE(testStringIsEmpty) {
     assertThat(s, is(emptyString()));
 }
 
+BOOST_AUTO_TEST_CASE(testLessThanInteger) {
+    assertThat(1, is(lessThan(1)));
+}
+
+BOOST_AUTO_TEST_CASE(testGreaterThanInteger) {
+    assertThat(1, is(greaterThan(1)));
+}
+
+BOOST_AUTO_TEST_CASE(testGreaterThanOrEqualToInteger) {
+    assertThat(1, is(greaterThanOrEqualTo(2)));
+}
+
+BOOST_AUTO_TEST_CASE(testLessThanOrEqualToInteger) {
+    assertThat(2, is(lessThanOrEqualTo(1)));
+}
+

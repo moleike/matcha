@@ -194,6 +194,22 @@ TEST(Matcha, testStringIsEmpty) {
     assertThat(s, is(emptyString()));
 }
 
+TEST(Matcha, testLessThanInteger) {
+    assertThat(1, is(lessThan(1)));
+}
+
+TEST(Matcha, testGreaterThanInteger) {
+    assertThat(1, is(greaterThan(1)));
+}
+
+TEST(Matcha, testGreaterThanOrEqualToInteger) {
+    assertThat(1, is(greaterThanOrEqualTo(2)));
+}
+
+TEST(Matcha, testLessThanOrEqualToInteger) {
+    assertThat(2, is(lessThanOrEqualTo(1)));
+}
+
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
