@@ -1,14 +1,26 @@
 matcha
 ======
 
-Matcha (抹茶) is a C++ port of [Java Hamcrest](http://hamcrest.org/JavaHamcrest/) framework of matcher objects.
-
-From the original project:
-> Provides a library of matcher objects (also known as constraints or predicates) allowing 'match' rules to be defined declaratively, to be used in other frameworks. Typical scenarios include testing frameworks, mocking libraries and UI validation rules.
-
-Currently provides an implementation of most of the core matchers from Hamcrest and currently integrates with [Google C++ Testing Framework](https://code.google.com/p/googletest/).
+Matcha (抹茶) is a C++ port of [Java Hamcrest](http://hamcrest.org/JavaHamcrest/) framework of matcher objects. 
 
 Matcha follows a [policy-based](http://en.wikipedia.org/wiki/Policy-based_design) class design, where both matchers and result actions are policies, with the aim of simplifying the writing of custom matchers.
+
+Examples
+--------
+```
+assertThat("foo1", is(allOf(not(emptyString()), matches("[a-z]+"))));
+```
+This assertion fails, and we get this message:
+```
+Expected: is all of not an empty string and a string matching the pattern [a-z]+.
+ but got: foo1
+``` 
+
+Examples are located in test directory.
+
+Integration
+-----------
+Currently supports Boost and Google C++ Testing frameworks. By default it prints to stdout, and can also throw an exception when an assertion fails.
 
 Dependencies
 ------------
@@ -28,10 +40,6 @@ cmake ..
 make
 ./test/example_test
 ```
-
-Examples
---------
-Examples are located in test directory.
 
 Writing Custom Matchers
 -----------------------
