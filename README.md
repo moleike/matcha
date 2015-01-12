@@ -8,11 +8,11 @@ Matcha follows a [policy-based](http://en.wikipedia.org/wiki/Policy-based_design
 Examples
 --------
 ```
-assertThat("foo1", is(allOf(not(emptyString()), matches("[a-z]+"))));
+assertThat("foo1", is(anyOf(emptyString(), matches("[a-z]+"))));
 ```
 This assertion fails, and we get this message:
 ```
-Expected: is all of not an empty string and a string matching the pattern [a-z]+.
+Expected: is any of an empty string or a string matching the pattern [a-z]+.
  but got: foo1
 ``` 
 
