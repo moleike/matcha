@@ -243,7 +243,9 @@ class Matcher : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,ExpectedType> type;
     Matcher(ExpectedType const& value = ExpectedType()) : expected_(value)
-    { }
+    {
+      std::cout << "base template" << std::endl;
+    }
 
     template<class ActualType>
     bool matches(ActualType const& actual) const {
@@ -327,51 +329,59 @@ private:
 };
 
 // pointers
-template<class MatcherPolicy, class ExpectedType, class OutputPolicy>
-class Matcher<MatcherPolicy,ExpectedType*,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
-public:
-    typedef Matcher<MatcherPolicy,ExpectedType*> type;
-    Matcher(ExpectedType const* pvalue) : expected_(pvalue) { }
+//template<class MatcherPolicy, class ExpectedType, class OutputPolicy>
+//class Matcher<MatcherPolicy,ExpectedType*,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+//public:
+//    typedef Matcher<MatcherPolicy,ExpectedType*> type;
+//    Matcher(ExpectedType const* pvalue) : expected_(pvalue) {
+//      std::cout << "pointer template" << std::endl;
+//    }
+//
+//    template<class ActualType>
+//    bool matches(ActualType const* actual) const {
+//        return MatcherPolicy::matches(expected_, actual);
+//    }
+//
+//    template<class ActualType>
+//    friend auto assertResult(const char*,
+//                             const char*,
+//                             ActualType const* actual,
+//                             type const& matcher) -> typename OutputPolicy::return_type {
+//        std::ostringstream sactual, smatcher;
+//        sactual << actual;
+//        smatcher << matcher;
+//        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+//    }
+//
+//    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+//        matcher.describe(o);
+//        return o;
+//    }
+//private:
+//    void describe(std::ostream& o) const {
+//        MatcherPolicy::describe(o, expected_);
+//    }
+//    ExpectedType const* expected_;
+//};
 
-    template<class ActualType>
-    bool matches(ActualType const* actual) const {
-        return MatcherPolicy::matches(expected_, actual);
-    }
-
-    template<class ActualType>
-    friend auto assertResult(const char*,
-                             const char*,
-                             ActualType const* actual,
-                             type const& matcher) -> typename OutputPolicy::return_type {
-        std::ostringstream sactual, smatcher;
-        sactual << actual;
-        smatcher << matcher;
-        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
-    }
-
-    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
-        matcher.describe(o);
-        return o;
-    }
-private:
-    void describe(std::ostream& o) const {
-        MatcherPolicy::describe(o, expected_);
-    }
-    ExpectedType const* expected_;
-};
-
-// raw C-style arrays are wrapped in std::vector
+// raw C-style arrays
 template<class MatcherPolicy, class ExpectedType, size_t N, class OutputPolicy>
 class Matcher<MatcherPolicy,ExpectedType[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
     typedef Matcher<MatcherPolicy,ExpectedType[N]> type;
     Matcher(ExpectedType const (&value)[N])
-        : expected_(std::begin(value), std::end(value)) { }
+        : expected_(value) {
+          std::cout << "array template" << std::endl;
+        }
 
     template<size_t M>
     bool matches(ExpectedType const (&actual)[M]) const {
-        std::vector<ExpectedType> wrapper(std::begin(actual), std::end(actual));
-        return MatcherPolicy::matches(expected_, wrapper);
+        std::vector<ExpectedType> actual_vec(actual, actual + M), expected_vec(expected_, expected_ + N);
+        return MatcherPolicy::matches(expected_vec, actual_vec);
+    }
+ 
+    bool matches(std::string const& actual) const {
+        return MatcherPolicy::matches(std::string(expected_), actual);
     }
 
     template<size_t M>
@@ -393,47 +403,7 @@ private:
     void describe(std::ostream& o) const {
         MatcherPolicy::describe(o, expected_);
     }
-    std::vector<ExpectedType> expected_;
-};
-
-
-// null-terminated strings are converted to std::string
-template<class MatcherPolicy, size_t N, class OutputPolicy>
-class Matcher<MatcherPolicy,char[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
-public:
-    typedef Matcher<MatcherPolicy,char[N]> type;
-    Matcher(char const (&value)[N])
-        : expected_(value) { }
-
-    template<size_t M>
-    bool matches(char const (&actual)[M]) const {
-        return MatcherPolicy::matches(expected_, std::string(actual));
-    }
-
-    bool matches(std::string const& actual) const {
-        return MatcherPolicy::matches(expected_, actual);
-    }
-
-    template<size_t M>
-    friend auto assertResult(const char*,
-                             const char*,
-                             char const (&actual)[M],
-                             type const& matcher) -> typename OutputPolicy::return_type {
-        std::ostringstream sactual, smatcher;
-        sactual << actual;
-        smatcher << matcher;
-        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
-    }
-
-    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
-        matcher.describe(o);
-        return o;
-    }
-private:
-    void describe(std::ostream& o) const {
-        MatcherPolicy::describe(o, expected_);
-    }
-    std::string expected_;
+    ExpectedType const (&expected_)[N];
 };
 
 struct Is_ {
