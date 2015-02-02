@@ -445,20 +445,19 @@ IsNot<Matcher<Policy,T>> operator!(Matcher<Policy,T> const& value) {
 struct IsNull_ {
 protected:
     template<typename T>
-    bool matches(std::nullptr_t expected, T const* actual) const {
-        return actual == expected;
+    bool matches(T const* actual) const {
+        return actual == nullptr;
     }
 
-    template<typename T>
-    void describe(std::ostream& o, T const& expected) const {
+    void describe(std::ostream& o) const {
         o << "null pointer";
     }
 };
 
-using IsNull = Matcher<IsNull_,std::nullptr_t>;
+using IsNull = Matcher<IsNull_>;
 
 IsNull null() {
-    return IsNull(nullptr);
+    return IsNull();
 }
 
 struct IsEqual_ {
