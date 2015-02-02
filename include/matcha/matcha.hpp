@@ -241,10 +241,8 @@ protected:
 template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = MATCHA_OUTPUT_POLICY>
 class Matcher : private MatcherPolicy, private OutputPolicy {
 public:
-    typedef Matcher<MatcherPolicy,ExpectedType> type;
     Matcher(ExpectedType const& value = ExpectedType()) : expected_(value)
     {
-      std::cout << "base template" << std::endl;
     }
 
     template<class ActualType>
@@ -267,7 +265,7 @@ public:
     friend auto assertResult(const char*,
                              const char*,
                              ActualType const& actual,
-                             type const& matcher) -> typename OutputPolicy::return_type {
+                             Matcher const& matcher) -> typename OutputPolicy::return_type {
         std::ostringstream sactual, smatcher;
         sactual << actual;
         smatcher << matcher;
@@ -278,14 +276,14 @@ public:
     friend auto assertResult(const char*,
                              const char*,
                              ExpectedType const (&actual)[N],
-                             type const& matcher) -> typename OutputPolicy::return_type {
+                             Matcher const& matcher) -> typename OutputPolicy::return_type {
         std::ostringstream sactual, smatcher;
         sactual << actual;
         smatcher << matcher;
         return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
     }
 
-    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+    friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
         matcher.describe(o);
         return o;
     }
@@ -300,8 +298,6 @@ private:
 template<class MatcherPolicy, class OutputPolicy>
 class Matcher<MatcherPolicy,void,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
-    typedef Matcher<MatcherPolicy> type;
-
     template<class ActualType>
     bool matches(ActualType const& actual) const {
         return MatcherPolicy::matches(actual);
@@ -311,14 +307,14 @@ public:
     friend auto assertResult(const char*,
                              const char*,
                              ActualType const& actual,
-                             type const& matcher) -> typename OutputPolicy::return_type {
+                             Matcher const& matcher) -> typename OutputPolicy::return_type {
         std::ostringstream sactual, smatcher;
         sactual << actual;
         smatcher << matcher;
         return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
     }
 
-    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+    friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
         matcher.describe(o);
         return o;
     }
@@ -368,11 +364,8 @@ private:
 template<class MatcherPolicy, class ExpectedType, size_t N, class OutputPolicy>
 class Matcher<MatcherPolicy,ExpectedType[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
-    typedef Matcher<MatcherPolicy,ExpectedType[N]> type;
-    Matcher(ExpectedType const (&value)[N])
-        : expected_(value) {
-          std::cout << "array template" << std::endl;
-        }
+    Matcher(ExpectedType const (&value)[N]) : expected_(value)
+    { }
 
     template<size_t M>
     bool matches(ExpectedType const (&actual)[M]) const {
@@ -388,14 +381,14 @@ public:
     friend auto assertResult(const char*,
                              const char*,
                              ExpectedType const (&actual)[M],
-                             type const& matcher) -> typename OutputPolicy::return_type {
+                             Matcher const& matcher) -> typename OutputPolicy::return_type {
         std::ostringstream sactual, smatcher;
         sactual << actual;
         smatcher << matcher;
         return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
     }
 
-    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
+    friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
         matcher.describe(o);
         return o;
     }
