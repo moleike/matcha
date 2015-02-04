@@ -165,10 +165,18 @@ std::ostream& operator<<(std::ostream& os, const ci_string& str)
     return os.write(str.data(), str.size());
 }
 
+template <typename T>
+std::string to_string(T const& val)
+{
+    std::ostringstream out;
+    out << val;
+    return out.str();
+}
+
 struct StandardOutputPolicy {
     typedef bool return_type;
 protected:
-    bool print(std::string const& expected, std::string const& actual, bool assertion) const {
+    bool print(std::string const& expected, std::string const& actual, bool assertion) const  {
         if (!assertion) {
             std::cout << "Expected: " << expected << "\n but got: " << actual << std::endl;
             return false;
@@ -199,7 +207,7 @@ protected:
     // Google Test implementation of matcher assertions
     return_type print(std::string const& expected,
                       std::string const& actual,
-                      bool assertion) const {
+                      bool assertion) const  {
         if (!assertion) {
             return ::testing::AssertionFailure()
                    << "Expected: " << expected << "\n but got: " << actual;
@@ -238,12 +246,12 @@ protected:
 
 #endif
 
-template<class MatcherPolicy,class ExpectedType = void, class OutputPolicy = MATCHA_OUTPUT_POLICY>
+template<class MatcherPolicy, class ExpectedType = void, class OutputPolicy = MATCHA_OUTPUT_POLICY>
 class Matcher : private MatcherPolicy, private OutputPolicy {
+    using result_type = typename OutputPolicy::return_type;
 public:
     Matcher(ExpectedType const& value = ExpectedType()) : expected_(value)
-    {
-    }
+    { }
 
     template<class ActualType>
     bool matches(ActualType const& actual) const {
@@ -261,106 +269,44 @@ public:
         return MatcherPolicy::matches(expected_, std::string(actual));
     }
 
+    /* the first two parameters are needed for google test */
     template<class ActualType>
-    friend auto assertResult(const char*,
-                             const char*,
-                             ActualType const& actual,
-                             Matcher const& matcher) -> typename OutputPolicy::return_type {
-        std::ostringstream sactual, smatcher;
-        sactual << actual;
-        smatcher << matcher;
-        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    friend result_type assertResult(const char*, const char*, 
+        ActualType const& actual, Matcher const& matcher) {
+        return matcher.print(to_string(matcher), to_string(actual), 
+                             matcher.matches(actual));
     }
 
     template<size_t N>
-    friend auto assertResult(const char*,
-                             const char*,
-                             ExpectedType const (&actual)[N],
-                             Matcher const& matcher) -> typename OutputPolicy::return_type {
-        std::ostringstream sactual, smatcher;
-        sactual << actual;
-        smatcher << matcher;
-        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
+    friend result_type assertResult(const char*, const char*,
+        ExpectedType const (&actual)[N], Matcher const& matcher) {
+        return matcher.print(to_string(matcher), to_string(actual), 
+                             matcher.matches(actual));
     }
 
     friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
-        matcher.describe(o);
+        matcher.describe(o, matcher.expected_);
         return o;
     }
 private:
-    void describe(std::ostream& o) const {
-        MatcherPolicy::describe(o, expected_);
-    }
     ExpectedType expected_;
 };
 
 // there is no expected value, for matcher not taking input parameters
 template<class MatcherPolicy, class OutputPolicy>
-class Matcher<MatcherPolicy,void,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
-public:
+struct Matcher<MatcherPolicy,void,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
     template<class ActualType>
     bool matches(ActualType const& actual) const {
         return MatcherPolicy::matches(actual);
-    }
-
-    template<class ActualType>
-    friend auto assertResult(const char*,
-                             const char*,
-                             ActualType const& actual,
-                             Matcher const& matcher) -> typename OutputPolicy::return_type {
-        std::ostringstream sactual, smatcher;
-        sactual << actual;
-        smatcher << matcher;
-        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
     }
 
     friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
         matcher.describe(o);
         return o;
     }
-private:
-    void describe(std::ostream& o) const {
-        MatcherPolicy::describe(o);
-    }
 };
 
-// pointers
-//template<class MatcherPolicy, class ExpectedType, class OutputPolicy>
-//class Matcher<MatcherPolicy,ExpectedType*,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
-//public:
-//    typedef Matcher<MatcherPolicy,ExpectedType*> type;
-//    Matcher(ExpectedType const* pvalue) : expected_(pvalue) {
-//      std::cout << "pointer template" << std::endl;
-//    }
-//
-//    template<class ActualType>
-//    bool matches(ActualType const* actual) const {
-//        return MatcherPolicy::matches(expected_, actual);
-//    }
-//
-//    template<class ActualType>
-//    friend auto assertResult(const char*,
-//                             const char*,
-//                             ActualType const* actual,
-//                             type const& matcher) -> typename OutputPolicy::return_type {
-//        std::ostringstream sactual, smatcher;
-//        sactual << actual;
-//        smatcher << matcher;
-//        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
-//    }
-//
-//    friend std::ostream& operator<<(std::ostream& o, type const& matcher) {
-//        matcher.describe(o);
-//        return o;
-//    }
-//private:
-//    void describe(std::ostream& o) const {
-//        MatcherPolicy::describe(o, expected_);
-//    }
-//    ExpectedType const* expected_;
-//};
-
-// raw C-style arrays
+// C-style arrays and strings
 template<class MatcherPolicy, class ExpectedType, size_t N, class OutputPolicy>
 class Matcher<MatcherPolicy,ExpectedType[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
 public:
@@ -376,26 +322,7 @@ public:
     bool matches(std::string const& actual) const {
         return MatcherPolicy::matches(std::string(expected_), actual);
     }
-
-    template<size_t M>
-    friend auto assertResult(const char*,
-                             const char*,
-                             ExpectedType const (&actual)[M],
-                             Matcher const& matcher) -> typename OutputPolicy::return_type {
-        std::ostringstream sactual, smatcher;
-        sactual << actual;
-        smatcher << matcher;
-        return matcher.print(smatcher.str(), sactual.str(), matcher.matches(actual));
-    }
-
-    friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
-        matcher.describe(o);
-        return o;
-    }
 private:
-    void describe(std::ostream& o) const {
-        MatcherPolicy::describe(o, expected_);
-    }
     ExpectedType const (&expected_)[N];
 };
 
