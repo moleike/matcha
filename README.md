@@ -7,16 +7,21 @@ Matcha follows a [policy-based](http://en.wikipedia.org/wiki/Policy-based_design
 
 Examples
 --------
-```
-assertThat("foo1", is(anyOf(emptyString(), matches("[a-z]+"))));
+```cpp
+TEST(Matcha, testExample) {
+    const char *tautogram[] = { "veni", "vidi", "vici" };
+    assertThat(tautogram, everyItem(startsWith("vi")));
+}
+
+
 ```
 This assertion fails, and we get this message:
 ```
-Expected: is any of an empty string or a string matching the pattern [a-z]+.
- but got: foo1
+Expected: every item starts with "vi"
+ but got: [veni, vidi, vici]
 ``` 
 
-Examples are located in test directory.
+More examples [here](examples).
 
 Integration
 -----------
@@ -45,13 +50,13 @@ Writing Custom Matchers
 -----------------------
 
 Let's write our own matcher for testing if a double value has the value NaN (not a number). This is the test we want to write:
-```
+```cpp
 TEST(NotANumber, testSquareRootOfMinusOneIsNotANumber) {
     assertThat(std::sqrt(-1), is(notANumber()));
 }
 ```
 In matcha, we write policy classes to encapsulate the matcher behaviour, which comprises two methods:
-```
+```cpp
 class IsNotANumber {
 protected:
     bool matches(double actual) const {
@@ -64,7 +69,7 @@ protected:
 };
 ```
 Matcher is the host class taking as type parameter the policy class:
-```
+```cpp
 Matcher<IsNotANumber> notANumber() {
     return Matcher<IsNotANumber>();
 }
