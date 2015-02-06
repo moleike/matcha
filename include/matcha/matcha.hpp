@@ -277,11 +277,20 @@ public:
                              matcher.matches(actual));
     }
 
-    template<size_t N>
+    template<class ActualType, size_t N>
     friend result_type assertResult(const char*, const char*,
-        ExpectedType const (&actual)[N], Matcher const& matcher) {
+        ActualType const (&actual)[N], Matcher const& matcher) {
         return matcher.print(to_string(matcher), to_string(actual), 
                              matcher.matches(actual));
+    }
+
+    /* overload for accepting an array of nul-terminated strings */
+    template<size_t N>
+    friend result_type assertResult(const char*, const char*,
+        char const *(&actual)[N], Matcher const& matcher) 
+    {
+        std::vector<std::string> actual_arr(actual, actual + N);
+        return matcher.print(to_string(matcher), to_string(actual_arr), matcher.matches(actual_arr));
     }
 
     friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
@@ -456,6 +465,11 @@ protected:
     template<typename T>
     void describe(std::ostream& o, T const& expected) const {
        o << "contains " << expected;
+    }
+
+    template<typename T, typename Policy>
+    void describe(std::ostream& o, Matcher<Policy,T> const& expected) const {
+       o << "every item " << expected;
     }
 };
 
