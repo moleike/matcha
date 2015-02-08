@@ -277,9 +277,9 @@ public:
                              matcher.matches(actual));
     }
 
-    template<class ActualType, size_t N>
+    template<size_t N>
     friend result_type assertResult(const char*, const char*,
-        ActualType const (&actual)[N], Matcher const& matcher) {
+        ExpectedType const (&actual)[N], Matcher const& matcher) {
         return matcher.print(to_string(matcher), to_string(actual), 
                              matcher.matches(actual));
     }
@@ -330,6 +330,11 @@ public:
  
     bool matches(std::string const& actual) const {
         return MatcherPolicy::matches(std::string(expected_), actual);
+    }
+
+    friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
+        matcher.describe(o, matcher.expected_);
+        return o;
     }
 private:
     ExpectedType const (&expected_)[N];
