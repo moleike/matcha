@@ -793,9 +793,7 @@ Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
 }
 
 struct IsCloseTo {
-    template<typename T,
-             typename = typename
-               std::enable_if<std::is_floating_point<T>::value>::type>
+    template<typename T>
     bool matches (std::pair<T,T> const& expected, T const& actual) const {
         T value = expected.first;
         T delta = expected.second;
@@ -812,6 +810,8 @@ struct IsCloseTo {
 
 template<typename T>
 Matcher<IsCloseTo,std::pair<T,T>> closeTo(T const& operand, T const& error) {
+    static_assert(std::is_floating_point<T>::value, 
+                  "closeTo parameters need be floating-point type");
     return Matcher<IsCloseTo,std::pair<T,T>>(std::make_pair(operand, error));
 }
 
