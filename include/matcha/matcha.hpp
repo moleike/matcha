@@ -92,6 +92,16 @@ struct is_lessthan_comparable<T,
     > : std::true_type
 { };
 
+// SFINAE type trait to detect whether a class is a specialization of Template
+
+template <template <typename...> class Template, typename T>
+struct is_specialization_of : std::false_type
+{ };
+
+template <template <typename...> class Template, typename... Args>
+struct is_specialization_of<Template, Template<Args...>> : std::true_type
+{ };
+
 // SFINAE type trait to detect whether T and all of the Rest name the same type.
 
 template<typename T, typename... Rest>
@@ -340,15 +350,33 @@ private:
     ExpectedType const (&expected_)[N];
 };
 
+// SFINAE type trait to detect whether one or more classes are matchers
+
+template<typename... Ts>
+struct is_matcher : std::false_type 
+{ };
+
+template<typename T>
+struct is_matcher<T> : is_specialization_of<Matcher,T> 
+{ };
+
+template<typename First, typename... Rest>
+struct is_matcher<First, Rest...>
+    : std::integral_constant<
+        bool,
+        is_matcher<First>::value && is_matcher<Rest...>::value
+      >
+{ };
+
 struct Is_ {
 protected:
-    template<class Policy, class ExpType, class ActualType>
-    bool matches(Matcher<Policy,ExpType> const& expected, ActualType const& actual) const {
+    template<typename MatcherType, typename ActualType>
+    bool matches(MatcherType const& expected, ActualType const& actual) const {
         return expected.matches(actual);
     }
 
-    template<class Policy, class ExpType>
-    void describe(std::ostream& o, Matcher<Policy,ExpType> const& expected) const {
+    template<typename MatcherType>
+    void describe(std::ostream& o, MatcherType const& expected) const {
         o << "is " << expected;
     }
 };
@@ -356,20 +384,21 @@ protected:
 template<class T>
 using Is = Matcher<Is_,T>;
 
-template<class Policy, class ExpType>
-Is<Matcher<Policy,ExpType>> is(Matcher<Policy,ExpType> const& value) {
-    return Is<Matcher<Policy,ExpType>>(value);
+template<class T>
+Is<T> is(T const& value) {
+    static_assert(is_matcher<T>::value, "Is matcher requires a Matcher parameter");
+    return Is<T>(value);
 }
 
 struct IsNot_ {
 protected:
-    template<class Policy, class ExpType, class ActualType>
-    bool matches(Matcher<Policy,ExpType> const& expected, ActualType const& actual) const {
+    template<typename MatcherType, typename ActualType>
+    bool matches(MatcherType const& expected, ActualType const& actual) const {
         return !expected.matches(actual);
     }
 
-    template<class Policy, class ExpType>
-    void describe(std::ostream& o, Matcher<Policy,ExpType> const& expected) const {
+    template<typename MatcherType>
+    void describe(std::ostream& o, MatcherType const& expected) const {
         o << "not " << expected;
     }
 };
@@ -378,9 +407,10 @@ template<class T>
 using IsNot = Matcher<IsNot_,T>;
 
 
-template<class Policy, class T>
-IsNot<Matcher<Policy,T>> operator!(Matcher<Policy,T> const& value) {
-    return IsNot<Matcher<Policy,T>>(value);
+template<class T>
+IsNot<T> operator!(T const& value) {
+    static_assert(is_matcher<T>::value, "IsNot matcher requires a Matcher parameter");
+    return IsNot<T>(value);
 }
 
 struct IsNull_ {
@@ -717,6 +747,7 @@ private:
 
 template<typename First, typename... Args>
 Matcher<AnyOf_,std::tuple<First,Args...>> anyOf(First first, Args... args) {
+    static_assert(is_matcher<First, Args...>::value, "anyOf requires Matcher parameters");
     return Matcher<AnyOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
@@ -757,6 +788,7 @@ private:
 
 template<typename First, typename... Args>
 Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
+    static_assert(is_matcher<First, Args...>::value, "allOf requires Matcher parameters");
     return Matcher<AllOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
