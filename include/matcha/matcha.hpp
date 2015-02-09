@@ -385,7 +385,7 @@ template<class T>
 using Is = Matcher<Is_,T>;
 
 template<class T>
-Is<T> is(T const& value) {
+constexpr Is<T> is(T const& value) {
     static_assert(is_matcher<T>::value, "Is matcher requires a Matcher parameter");
     return Is<T>(value);
 }
@@ -408,7 +408,7 @@ using IsNot = Matcher<IsNot_,T>;
 
 
 template<class T>
-IsNot<T> operator!(T const& value) {
+constexpr IsNot<T> operator!(T const& value) {
     static_assert(is_matcher<T>::value, "IsNot matcher requires a Matcher parameter");
     return IsNot<T>(value);
 }
@@ -427,7 +427,7 @@ protected:
 
 using IsNull = Matcher<IsNull_>;
 
-IsNull null() {
+constexpr IsNull null() {
     return IsNull();
 }
 
@@ -467,12 +467,12 @@ template<class T>
 using IsEqual = Matcher<IsEqual_,T>;
 
 template<typename T>
-IsEqual<T> equalTo(T const& value) {
+constexpr IsEqual<T> equalTo(T const& value) {
     return IsEqual<T>(value);
 }
 
 template<typename T, size_t N>
-IsEqual<T[N]> equalTo(T const (&value)[N]) {
+constexpr IsEqual<T[N]> equalTo(T const (&value)[N]) {
     return IsEqual<T[N]>(value);
 }
 
@@ -517,22 +517,22 @@ template<class T>
 using IsContaining = Matcher<IsContaining_,T>;
 
 template<typename T>
-IsContaining<T> contains(T const& value) {
+constexpr IsContaining<T> contains(T const& value) {
     return IsContaining<T>(value);
 }
 
 template<typename T, size_t N>
-IsContaining<T[N]> contains(T const (&value)[N]) {
+constexpr IsContaining<T[N]> contains(T const (&value)[N]) {
     return IsContaining<T[N]>(value);
 }
 
 template<class Key, class T>
-IsContaining<std::pair<const Key,T>> contains(Key const& key, T const& value) {
+constexpr IsContaining<std::pair<const Key,T>> contains(Key const& key, T const& value) {
     return IsContaining<std::pair<const Key,T>>(std::pair<const Key,T>(key, value));
 }
 
 template<typename T, typename Policy>
-IsContaining<Matcher<Policy,T>> everyItem(Matcher<Policy,T> const& itemMatcher) {
+constexpr IsContaining<Matcher<Policy,T>> everyItem(Matcher<Policy,T> const& itemMatcher) {
     return IsContaining<Matcher<Policy,T>>(itemMatcher);
 }
 
@@ -558,7 +558,7 @@ template<class T>
 using IsContainingKey = Matcher<IsContainingKey_,T>;
 
 template<typename T>
-IsContainingKey<T> hasKey(T const& key) {
+constexpr IsContainingKey<T> hasKey(T const& key) {
     return IsContainingKey<T>(key);
 }
 
@@ -581,7 +581,7 @@ template<typename C>
 using IsIn = Matcher<IsIn_,C>;
 
 template<typename C>
-IsIn<C> in(C const& cont) {
+constexpr IsIn<C> in(C const& cont) {
     return IsIn<C>(cont);
 }
 
@@ -612,7 +612,7 @@ protected:
 
 using IsEmpty = Matcher<IsEmpty_>;
 
-IsEmpty empty() {
+constexpr IsEmpty empty() {
     return IsEmpty();
 }
 
@@ -629,7 +629,7 @@ protected:
 
 using IsEmptyString = Matcher<IsEmptyString_>;
 
-IsEmptyString emptyString() {
+constexpr IsEmptyString emptyString() {
     return IsEmptyString();
 }
 
@@ -751,7 +751,7 @@ private:
 };
 
 template<typename First, typename... Args>
-Matcher<AnyOf_,std::tuple<First,Args...>> anyOf(First first, Args... args) {
+constexpr Matcher<AnyOf_,std::tuple<First,Args...>> anyOf(First first, Args... args) {
     static_assert(is_matcher<First, Args...>::value, "anyOf requires Matcher parameters");
     return Matcher<AnyOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
@@ -792,7 +792,7 @@ private:
 };
 
 template<typename First, typename... Args>
-Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
+constexpr Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
     static_assert(is_matcher<First, Args...>::value, "allOf requires Matcher parameters");
     return Matcher<AllOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
@@ -817,7 +817,7 @@ template<typename T>
 using IsCloseTo = Matcher<IsCloseTo_,T>;
 
 template<typename T>
-IsCloseTo<std::pair<T,T>> closeTo(T const& operand, T const& error) {
+constexpr IsCloseTo<std::pair<T,T>> closeTo(T const& operand, T const& error) {
     static_assert(std::is_floating_point<T>::value, 
                   "closeTo parameters need be floating-point type");
     return IsCloseTo<std::pair<T,T>>(std::make_pair(operand, error));
