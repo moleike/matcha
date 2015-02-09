@@ -536,7 +536,7 @@ IsContaining<Matcher<Policy,T>> everyItem(Matcher<Policy,T> const& itemMatcher) 
     return IsContaining<Matcher<Policy,T>>(itemMatcher);
 }
 
-struct IsContainingKey {
+struct IsContainingKey_ {
 protected:
     template<typename C, typename T,
          typename std::enable_if<std::is_same<typename C::key_type,T>::value>::type* = nullptr>
@@ -554,9 +554,12 @@ protected:
     }
 };
 
+template<class T>
+using IsContainingKey = Matcher<IsContainingKey_,T>;
+
 template<typename T>
-Matcher<IsContainingKey,T> hasKey(T const& key) {
-    return Matcher<IsContainingKey,T>(key);
+IsContainingKey<T> hasKey(T const& key) {
+    return IsContainingKey<T>(key);
 }
 
 struct IsIn_ {
@@ -651,7 +654,7 @@ IsEqualIgnoringCase equalToIgnoringCase(std::string const& val) {
     return IsEqualIgnoringCase(val);
 }
 
-struct IsEqualIgnoringWhiteSpace {
+struct IsEqualIgnoringWhiteSpace_ {
 protected:
     bool matches(std::string const& expected, std::string const& actual) const {
         std::string exp(expected), act(actual);
@@ -672,8 +675,10 @@ protected:
     }
 };
 
-Matcher<IsEqualIgnoringWhiteSpace,std::string> equalToIgnoringWhiteSpace(std::string const& val) {
-    return Matcher<IsEqualIgnoringWhiteSpace,std::string>(val);
+using IsEqualIgnoringWhiteSpace = Matcher<IsEqualIgnoringWhiteSpace_,std::string>;
+
+IsEqualIgnoringWhiteSpace equalToIgnoringWhiteSpace(std::string const& val) {
+    return IsEqualIgnoringWhiteSpace(val);
 }
 
 struct StringStartsWith_ {
@@ -792,7 +797,7 @@ Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
     return Matcher<AllOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
-struct IsCloseTo {
+struct IsCloseTo_ {
     template<typename T>
     bool matches (std::pair<T,T> const& expected, T const& actual) const {
         T value = expected.first;
@@ -809,10 +814,13 @@ struct IsCloseTo {
 };
 
 template<typename T>
-Matcher<IsCloseTo,std::pair<T,T>> closeTo(T const& operand, T const& error) {
+using IsCloseTo = Matcher<IsCloseTo_,T>;
+
+template<typename T>
+IsCloseTo<std::pair<T,T>> closeTo(T const& operand, T const& error) {
     static_assert(std::is_floating_point<T>::value, 
                   "closeTo parameters need be floating-point type");
-    return Matcher<IsCloseTo,std::pair<T,T>>(std::make_pair(operand, error));
+    return IsCloseTo<std::pair<T,T>>(std::make_pair(operand, error));
 }
 
 
