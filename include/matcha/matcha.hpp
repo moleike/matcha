@@ -599,9 +599,9 @@ IsIn<std::vector<std::string>> oneOf(const char (&first)[M], const char (&...arg
 
 struct IsEmpty_ {
 protected:
-    template<typename C, typename std::enable_if<
-            pretty_print::is_container<C>::value>::type* = nullptr>
+    template<typename C>
     bool matches(C const& actual) const {
+        static_assert(pretty_print::is_container<C>::value, "empty matcher is for std containers");
         return actual.empty();
     }
 
@@ -750,10 +750,14 @@ private:
     }
 };
 
+template<typename T>
+using AnyOf = Matcher<AnyOf_,T>;
+
 template<typename First, typename... Args>
-constexpr Matcher<AnyOf_,std::tuple<First,Args...>> anyOf(First first, Args... args) {
+constexpr AnyOf<std::tuple<First,Args...>> anyOf(First first, Args... args)
+{
     static_assert(is_matcher<First, Args...>::value, "anyOf requires Matcher parameters");
-    return Matcher<AnyOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
+    return AnyOf<std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
 struct AllOf_ {
@@ -791,10 +795,14 @@ private:
     }
 };
 
+template<typename T>
+using AllOf = Matcher<AllOf_,T>;
+
 template<typename First, typename... Args>
-constexpr Matcher<AllOf_,std::tuple<First,Args...>> allOf(First first, Args... args) {
+constexpr AllOf<std::tuple<First,Args...>> allOf(First first, Args... args)
+{
     static_assert(is_matcher<First, Args...>::value, "allOf requires Matcher parameters");
-    return Matcher<AllOf_,std::tuple<First,Args...>>(std::make_tuple(first, args...));
+    return AllOf<std::tuple<First,Args...>>(std::make_tuple(first, args...));
 }
 
 struct IsCloseTo_ {
