@@ -1,7 +1,7 @@
 matcha
 ======
 
-Matcha (抹茶) is a C++ port of [Java Hamcrest](http://hamcrest.org/JavaHamcrest/) framework of matcher objects. 
+<b>matcha</b> (抹茶) is a C++11 port of [Java Hamcrest](http://hamcrest.org/JavaHamcrest/) framework of matcher objects. 
 
 Matcha follows a [policy-based](http://en.wikipedia.org/wiki/Policy-based_design) class design, where both matchers and result actions are policies, with the aim of simplifying the writing of custom matchers.
 
