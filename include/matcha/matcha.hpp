@@ -350,6 +350,32 @@ private:
     ExpectedType const (&expected_)[N];
 };
 
+// this is just sugar to make it easy to create a matcher
+// still preferred to use a free function though
+
+template<class MatcherPolicy>
+struct MatcherGenerator {
+    Matcher<MatcherPolicy> operator()() const {
+        return Matcher<MatcherPolicy>(); 
+    }
+
+    template<class T>
+    Matcher<MatcherPolicy,T> operator()(T const& value) const {
+        return Matcher<MatcherPolicy,T>(value); 
+    }
+
+    template<typename T, size_t N>
+    Matcher<MatcherPolicy,T[N]> operator()(T const (&value)[N]) const {
+        return Matcher<MatcherPolicy,T[N]>(value);
+    }
+};
+
+template<class MatcherPolicy>
+MatcherGenerator<MatcherPolicy> make_matcher() {
+    return MatcherGenerator<MatcherPolicy>();
+}
+
+
 // SFINAE type trait to detect whether one or more classes are matchers
 
 template<typename... Ts>
@@ -368,10 +394,11 @@ struct is_matcher<First, Rest...>
       >
 { };
 
-struct Is_ {
+struct Is {
 protected:
     template<typename MatcherType, typename ActualType>
     bool matches(MatcherType const& expected, ActualType const& actual) const {
+        static_assert(is_matcher<MatcherType>::value, "IsNot matcher requires a Matcher parameter");
         return expected.matches(actual);
     }
 
@@ -381,14 +408,7 @@ protected:
     }
 };
 
-template<class T>
-using Is = Matcher<Is_,T>;
-
-template<class T>
-constexpr Is<T> is(T const& value) {
-    static_assert(is_matcher<T>::value, "Is matcher requires a Matcher parameter");
-    return Is<T>(value);
-}
+auto is = make_matcher<Is>();
 
 struct IsNot_ {
 protected:
@@ -413,7 +433,7 @@ constexpr IsNot<T> operator!(T const& value) {
     return IsNot<T>(value);
 }
 
-struct IsNull_ {
+struct IsNull {
 protected:
     template<typename T>
     bool matches(T const* actual) const {
@@ -425,13 +445,10 @@ protected:
     }
 };
 
-using IsNull = Matcher<IsNull_>;
+auto null = make_matcher<IsNull>();
 
-constexpr IsNull null() {
-    return IsNull();
-}
 
-struct IsEqual_ {
+struct IsEqual {
 protected:
     template<typename T>
     bool matches(T const& expected, T const& actual,
@@ -459,22 +476,11 @@ protected:
 };
 
 template<>
-void IsEqual_::describe(std::ostream& o, std::string const& expected) const {
+void IsEqual::describe(std::ostream& o, std::string const& expected) const {
    o << "\"" << expected << "\"";
 }
 
-template<class T>
-using IsEqual = Matcher<IsEqual_,T>;
-
-template<typename T>
-constexpr IsEqual<T> equalTo(T const& value) {
-    return IsEqual<T>(value);
-}
-
-template<typename T, size_t N>
-constexpr IsEqual<T[N]> equalTo(T const (&value)[N]) {
-    return IsEqual<T[N]>(value);
-}
+auto equalTo = make_matcher<IsEqual>();
 
 struct IsContaining_ {
 protected:

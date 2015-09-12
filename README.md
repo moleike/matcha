@@ -57,8 +57,8 @@ TEST(NotANumber, testSquareRootOfMinusOneIsNotANumber) {
 ```
 In matcha, we write policy classes to encapsulate the matcher behaviour, which comprises two methods:
 ```cpp
-class IsNotANumber {
-protected:
+struct IsNotANumber {
+		// test for NaN
     bool matches(double actual) const {
         return std::isnan(actual);
     }
@@ -68,22 +68,12 @@ protected:
     }
 };
 ```
-Matcher is the host class taking as type parameter the policy class:
+Create a matcher with the desired name:
 ```cpp
-Matcher<IsNotANumber> notANumber() {
-    return Matcher<IsNotANumber>();
+auto notANumber = make_matcher<IsNotANumber>();
 }
 ```
-There are two other type paramteres: the expected value type, for matchers that have an argument (defaults to void) and the output policy, which defaults to stdout.
 
-For example, the result of the failure using GTest:
-```
-[ RUN      ] TestNaN.SomeValue
-/Users/alex/Playground/matcha/test/example-gtest.cpp:47: Failure
-Expected: is not a number (NaN)
- but got: 1.0
-[  FAILED  ] TestNaN.SomeValue (0 ms)
-```
 Notes
 -----
 Currently works well with primitive types and std containers. User-defined types should provide:
