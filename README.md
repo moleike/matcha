@@ -1,7 +1,7 @@
 matcha
 ======
 
-<b>matcha</b> (抹茶) is a C++11 port of [Java Hamcrest](http://hamcrest.org/JavaHamcrest/) framework of matcher objects. 
+<b>matcha</b> (抹茶) is a C++11 port of [Java Hamcrest](http://hamcrest.org/JavaHamcrest/) framework of matcher objects. Currently supports Boost and Google C++ Testing frameworks. By default it prints to stdout, and can also throw an exception when an assertion fails.
 
 Matcha follows a [policy-based](http://en.wikipedia.org/wiki/Policy-based_design) class design, where both matchers and result actions are policies, with the aim of simplifying the writing of custom matchers.
 
@@ -22,10 +22,6 @@ Expected: every item starts with "vi"
 ``` 
 
 More examples [here](examples).
-
-Integration
------------
-Currently supports Boost and Google C++ Testing frameworks. By default it prints to stdout, and can also throw an exception when an assertion fails.
 
 Dependencies
 ------------
@@ -57,21 +53,15 @@ TEST(NotANumber, testSquareRootOfMinusOneIsNotANumber) {
 ```
 In matcha, we write policy classes to encapsulate the matcher behaviour, which comprises two methods:
 ```cpp
-struct IsNotANumber {
-		// test for NaN
-    bool matches(double actual) const {
-        return std::isnan(actual);
-    }
-    // describe what you expected
-    void describe(std::ostream& o) const {
-       o << "not a number (NaN);
-    }
+struct IsNotANumber 
+{
+    bool matches(double actual) const { return std::isnan(actual); }
+    void describe(std::ostream& o) const { o << "not a number (NaN)"; }
 };
 ```
 Create a matcher with the desired name:
 ```cpp
 auto notANumber = make_matcher<IsNotANumber>();
-}
 ```
 
 Notes
