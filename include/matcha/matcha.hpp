@@ -355,13 +355,10 @@ private:
 
 template<class MatcherPolicy>
 struct MatcherGenerator {
-    Matcher<MatcherPolicy> operator()() const {
-        return Matcher<MatcherPolicy>(); 
-    }
 
-    template<class T>
-    Matcher<MatcherPolicy,T> operator()(T const& value) const {
-        return Matcher<MatcherPolicy,T>(value); 
+    template<typename... T>
+    Matcher<MatcherPolicy,T...> operator()(T const& ...value) const {
+        return Matcher<MatcherPolicy,T...>(value...); 
     }
 
     template<typename T, size_t N>
