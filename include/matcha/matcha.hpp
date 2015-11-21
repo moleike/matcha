@@ -221,7 +221,7 @@ struct output_traits<::testing::AssertionResult>
     }
 };
 
-template<class T, class Matcher, class Return>
+template<class T, class Matcher>
 ::testing::AssertionResult
 assertResult(const char *, const char *, T const& actual, Matcher const& matcher) {
     return assertResult<::testing::AssertionResult>(actual, matcher);
