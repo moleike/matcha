@@ -9,16 +9,16 @@ Examples
 --------
 ```cpp
 TEST(Matcha, testExample) {
-    const char *tautogram[] = { "veni", "vidi", "vici" };
-    assertThat(tautogram, everyItem(startsWith("vi")));
+    std::array<std::string,3> tautogram = { "veni", "vidi", "vici" };
+    assertThat(tautogram, not(everyItem(endsWith("i"))));
 }
 
 
 ```
 This assertion fails, and we get this message:
 ```
-Expected: every item starts with "vi"
- but got: [veni, vidi, vici]
+Expected: not every item ends with "i"
+but got : [veni, vidi, vici]
 ``` 
 
 More examples [here](examples).

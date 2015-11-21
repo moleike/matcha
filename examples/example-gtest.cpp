@@ -24,6 +24,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <array>
 #define MATCHA_GTEST
 #include "matcha/matcha.hpp"
 
@@ -208,6 +209,11 @@ TEST(Matcha, testGreaterThanOrEqualToInteger) {
 
 TEST(Matcha, testLessThanOrEqualToInteger) {
     assertThat(2, is(lessThanOrEqualTo(1)));
+}
+
+TEST(Matcha, testExample) {
+    std::array<std::string,3> tautogram = { "veni", "vidi", "vici" };
+    assertThat(tautogram, not(everyItem(endsWith("i"))));
 }
 
 int main(int argc, char **argv)

@@ -29,6 +29,7 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <array>
 #include <cstring>
 #include <cctype>
 #include <type_traits>
@@ -51,12 +52,13 @@
  * provide an empty string here, and the matcher description in the result
  */
 #define assertThat(actual,matcher)  \
-  BOOST_CHECK_MESSAGE(assertResult(nullptr, nullptr, actual, matcher), "")
+  BOOST_CHECK_MESSAGE               \
+    (assertResult<boost::test_tools::predicate_result>(actual, matcher), "")
 
 #else
 
 #define assertThat(actual, matcher) \
-    assertResult(nullptr, nullptr, actual, matcher)
+    assertResult<bool>(actual, matcher)
 
 #endif
 
@@ -183,82 +185,88 @@ std::string to_string(T const& val)
     return out.str();
 }
 
-struct StandardOutputPolicy {
-    typedef bool return_type;
-protected:
-    bool print(std::string const& expected, std::string const& actual, bool assertion) const  {
-        if (!assertion) {
-            std::cout << "Expected: " << expected << "\n but got: " << actual << std::endl;
-            return false;
-        }
-        return true;
-    }
-};
+template<typename T>
+struct output_traits;
 
-struct ExceptionOutputPolicy {
-    typedef void return_type;
-protected:
-    void print(std::string const& expected, std::string const& actual, bool assertion) const {
-        if (!assertion) {
-            std::ostringstream ostream;
-            ostream << "Expected: " << expected << "\n but got: " << actual << std::endl;
-            throw std::logic_error(ostream.str());
-            return;
-        }
-        return;
+template<>
+struct output_traits<bool>
+{
+    typedef bool result_type;
+    static constexpr bool success = true;
+    static constexpr bool failure = false;
+
+    static std::ostream & ostream(bool & result) {
+        return std::cout;
     }
 };
 
 #if defined(MATCHA_GTEST)
 
-struct GTestOutputPolicy {
-    typedef ::testing::AssertionResult return_type;
-protected:
-    // Google Test implementation of matcher assertions
-    return_type print(std::string const& expected,
-                      std::string const& actual,
-                      bool assertion) const  {
-        if (!assertion) {
-            return ::testing::AssertionFailure()
-                   << "Expected: " << expected << "\n but got: " << actual;
-        }
+template<>
+struct output_traits<::testing::AssertionResult>
+{
+    typedef ::testing::AssertionResult result_type;
+
+    static ::testing::AssertionResult success() {
         return ::testing::AssertionSuccess();
+    }
+
+    static ::testing::AssertionResult failure() {
+        return ::testing::AssertionFailure();
+    }
+
+    static ::testing::AssertionResult & 
+    ostream(::testing::AssertionResult &result) {
+        return result;
     }
 };
 
-#define MATCHA_OUTPUT_POLICY GTestOutputPolicy
+template<class T, class Matcher, class Return>
+::testing::AssertionResult
+assertResult(const char *, const char *, T const& actual, Matcher const& matcher) {
+    return assertResult<::testing::AssertionResult>(actual, matcher);
+}
 
 #elif defined(MATCHA_BOOSTTEST)
 
-struct BTestOutputPolicy {
-    typedef boost::test_tools::predicate_result return_type;
-protected:
-    // Boost Test implementation of matcher assertions
-    return_type print(std::string const& expected,
-                      std::string const& actual,
-                      bool assertion) const {
-        if (!assertion) {
-            boost::test_tools::predicate_result res(false);
-            res.message() << "\nExpected: " << expected << "\n but got: " << actual;
-            return res;
-        }
-        return true;
+template<>
+struct output_traits<boost::test_tools::predicate_result>
+{
+    typedef boost::test_tools::predicate_result result_type;
+
+    static bool success() { 
+        return true; 
+    }
+
+    static boost::test_tools::predicate_result failure() { 
+        return false; 
+    }
+
+    static decltype(std::declval<boost::test_tools::predicate_result>().message()) & 
+    ostream(boost::test_tools::predicate_result & result) {
+        return result.message();
     }
 };
 
-#define MATCHA_OUTPUT_POLICY BTestOutputPolicy
-
 #endif
 
-#if !defined(MATCHA_OUTPUT_POLICY)
+template<class Result, class T, class Matcher>
+typename output_traits<Result>::result_type
+assertResult(T const& actual, Matcher const& matcher) {
+    Result result = output_traits<Result>::failure();
 
-#define MATCHA_OUTPUT_POLICY StandardOutputPolicy
+    if (matcher.matches(actual))
+        return output_traits<Result>::success();
 
-#endif
+    output_traits<Result>::ostream(result)    << '\n'
+        << "Expected: " << to_string(matcher) << '\n'
+        << "but got : " << to_string(actual)  << '\n'; 
 
-template<class MatcherPolicy, class ExpectedType = void, class OutputPolicy = MATCHA_OUTPUT_POLICY>
-class Matcher : private MatcherPolicy, private OutputPolicy {
-    using result_type = typename OutputPolicy::return_type;
+    return result;
+}
+
+template<class MatcherPolicy, class ExpectedType = void>
+class Matcher : public MatcherPolicy {
 public:
     Matcher(ExpectedType const& value = ExpectedType()) : expected_(value)
     { }
@@ -268,39 +276,9 @@ public:
         return MatcherPolicy::matches(expected_, actual);
     }
 
-    template<size_t N>
-    bool matches(ExpectedType const (&actual)[N]) const {
-        std::vector<ExpectedType> wrapper(std::begin(actual), std::end(actual));
-        return MatcherPolicy::matches(expected_, wrapper);
-    }
-
     template<size_t M>
     bool matches(char const (&actual)[M]) const {
         return MatcherPolicy::matches(expected_, std::string(actual));
-    }
-
-    /* the first two parameters are needed for google test */
-    template<class ActualType>
-    friend result_type assertResult(const char*, const char*, 
-        ActualType const& actual, Matcher const& matcher) {
-        return matcher.print(to_string(matcher), to_string(actual), 
-                             matcher.matches(actual));
-    }
-
-    template<size_t N>
-    friend result_type assertResult(const char*, const char*,
-        ExpectedType const (&actual)[N], Matcher const& matcher) {
-        return matcher.print(to_string(matcher), to_string(actual), 
-                             matcher.matches(actual));
-    }
-
-    /* overload for accepting an array of nul-terminated strings */
-    template<size_t N>
-    friend result_type assertResult(const char*, const char*,
-        char const *(&actual)[N], Matcher const& matcher) 
-    {
-        std::vector<std::string> actual_arr(actual, actual + N);
-        return matcher.print(to_string(matcher), to_string(actual_arr), matcher.matches(actual_arr));
     }
 
     friend std::ostream& operator<<(std::ostream& o, Matcher const& matcher) {
@@ -312,8 +290,9 @@ private:
 };
 
 // there is no expected value, for matcher not taking input parameters
-template<class MatcherPolicy, class OutputPolicy>
-struct Matcher<MatcherPolicy,void,OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+template<class MatcherPolicy>
+class Matcher<MatcherPolicy,void> : public MatcherPolicy {
+public:
     template<class ActualType>
     bool matches(ActualType const& actual) const {
         return MatcherPolicy::matches(actual);
@@ -326,8 +305,9 @@ struct Matcher<MatcherPolicy,void,OutputPolicy> : private MatcherPolicy, private
 };
 
 // C-style arrays and strings
-template<class MatcherPolicy, class ExpectedType, size_t N, class OutputPolicy>
-class Matcher<MatcherPolicy,ExpectedType[N],OutputPolicy> : private MatcherPolicy, private OutputPolicy {
+template<class MatcherPolicy, class ExpectedType, size_t N>
+class Matcher<MatcherPolicy,ExpectedType[N]> : public MatcherPolicy
+{
 public:
     Matcher(ExpectedType const (&value)[N]) : expected_(value)
     { }
@@ -371,6 +351,8 @@ template<class MatcherPolicy>
 MatcherGenerator<MatcherPolicy> make_matcher() {
     return MatcherGenerator<MatcherPolicy>();
 }
+
+
 
 
 // SFINAE type trait to detect whether one or more classes are matchers
@@ -487,6 +469,11 @@ protected:
         return std::end(cont) != std::find(std::begin(cont), std::end(cont), item);
     }
 
+    template<typename T, size_t N>
+    bool matches(T const& item, T const (&array)[N]) const {
+        return std::end(array) != std::find(std::begin(array), std::end(array), item);
+    }
+
     template<typename C = std::string, typename T = std::string>
     bool matches(std::string const& substr, std::string const& actual) const {
         return std::string::npos != actual.find(substr);
@@ -539,7 +526,7 @@ constexpr IsContaining<Matcher<Policy,T>> everyItem(Matcher<Policy,T> const& ite
     return IsContaining<Matcher<Policy,T>>(itemMatcher);
 }
 
-struct IsContainingKey_ {
+struct IsContainingKey {
 protected:
     template<typename C, typename T,
          typename std::enable_if<std::is_same<typename C::key_type,T>::value>::type* = nullptr>
@@ -557,13 +544,7 @@ protected:
     }
 };
 
-template<class T>
-using IsContainingKey = Matcher<IsContainingKey_,T>;
-
-template<typename T>
-constexpr IsContainingKey<T> hasKey(T const& key) {
-    return IsContainingKey<T>(key);
-}
+auto hasKey = make_matcher<IsContainingKey>();
 
 struct IsIn_ {
 protected:
@@ -571,6 +552,11 @@ protected:
          typename std::enable_if<std::is_same<typename C::value_type,T>::value>::type* = nullptr>
     bool matches(C const& cont, T const& item) const {
         return std::end(cont) != std::find(std::begin(cont), std::end(cont), item);
+    }
+
+    template<typename T, size_t N>
+    bool matches(T const (&array)[N], T const& item) const {
+        return std::end(array) != std::find(std::begin(array), std::end(array), item);
     }
 
     template<typename C>
