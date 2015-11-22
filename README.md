@@ -12,8 +12,6 @@ TEST(Matcha, testExample) {
     std::array<std::string,3> tautogram = { "veni", "vidi", "vici" };
     assertThat(tautogram, not(everyItem(endsWith("i"))));
 }
-
-
 ```
 This assertion fails, and we get this message:
 ```
@@ -45,25 +43,31 @@ make
 Writing Custom Matchers
 -----------------------
 
-Let's write our own matcher for testing if a double value has the value NaN (not a number). This is the test we want to write:
+Let's say you need to test if a word is a palindrome. This is the test we want to write:
 ```cpp
-TEST(NotANumber, testSquareRootOfMinusOneIsNotANumber) {
-    assertThat(std::sqrt(-1), is(notANumber()));
+TEST(Example, palindrome) {
+    assertThat("kayak", is(palindrome()));
 }
 ```
 In matcha, we write policy classes to encapsulate the matcher behaviour, which comprises two methods:
 ```cpp
-struct IsNotANumber 
+struct IsPalindrome 
 {
-    bool matches(double actual) const { return std::isnan(actual); }
-    void describe(std::ostream& o) const { o << "not a number (NaN)"; }
+    bool matches(const std::string& s) const 
+		{
+			return std::equal(s.begin(), s.begin() + s.size()/2, s.rbegin());
+		}
+
+    void describe(std::ostream& o) const 
+		{ 
+			o << "a palindromic word";
+		}
 };
 ```
 Create a matcher with the desired name:
 ```cpp
-auto notANumber = make_matcher<IsNotANumber>();
+auto palindrome = make_matcher<IsPalindrome>();
 ```
-
 Notes
 -----
 Currently works well with primitive types and std containers. User-defined types should provide:
