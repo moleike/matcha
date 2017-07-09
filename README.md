@@ -1,5 +1,5 @@
-matcha
-======
+matcha :tea:
+============
 
 <b>matcha</b> (抹茶) is a C++11 port of [Java Hamcrest](http://hamcrest.org/JavaHamcrest/) framework of matcher objects. Currently supports Boost and Google C++ Testing frameworks. By default it prints to stdout, and can also throw an exception when an assertion fails.
 
